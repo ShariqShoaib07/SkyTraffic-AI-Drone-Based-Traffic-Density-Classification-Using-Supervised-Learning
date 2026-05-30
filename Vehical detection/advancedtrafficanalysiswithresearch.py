@@ -69,7 +69,7 @@ class TrafficParticleFilter:
         max_distance = np.max(distances) if np.max(distances) > 0 else 1
         similarities = 1 - (distances / max_distance)
         
-        # Apply Gaussian kernel (similar to PoseRBPF's φ function)
+        # Apply Gaussian kernel (similar to PoseRBPF's ? function)
         likelihoods = np.exp(-0.5 * (distances ** 2) / 0.1)
         
         return likelihoods
@@ -406,9 +406,9 @@ def run_advanced_analysis():
     """
     Run comprehensive traffic analysis with research paper integration
     """
-    print("🚀 ADVANCED TRAFFIC ANALYSIS WITH RESEARCH INTEGRATION")
+    print("? ADVANCED TRAFFIC ANALYSIS WITH RESEARCH INTEGRATION")
     print("=" * 60)
-    print("📚 Integrating:")
+    print("? Integrating:")
     print("   - PoseRBPF: Rao-Blackwellized Particle Filter")
     print("   - KalmanNet: Neural Network Aided Kalman Filtering")
     print("=" * 60)
@@ -416,17 +416,17 @@ def run_advanced_analysis():
     # Load existing data
     features_csv = os.path.join(output_folder, "ml_features.csv")
     if not os.path.exists(features_csv):
-        print("❌ No feature data found. Please run previous phases first.")
+        print("? No feature data found. Please run previous phases first.")
         return
     
     df = pd.read_csv(features_csv)
-    print(f"📊 Loaded dataset with {len(df)} samples")
+    print(f"? Loaded dataset with {len(df)} samples")
     
     # Initialize advanced analyzer
     analyzer = AdvancedTrafficAnalyzer()
     
     # Advanced feature extraction simulation
-    print("\n🔬 EXTRACTING ADVANCED FEATURES...")
+    print("\n? EXTRACTING ADVANCED FEATURES...")
     advanced_features = []
     
     for idx, row in df.iterrows():
@@ -469,7 +469,7 @@ def run_advanced_analysis():
     # Save advanced features
     advanced_features_path = os.path.join(advanced_results_folder, "advanced_features.csv")
     advanced_df.to_csv(advanced_features_path, index=False)
-    print(f"✅ Saved advanced features: {advanced_features_path}")
+    print(f"? Saved advanced features: {advanced_features_path}")
     
     # Compare classification performance
     if 'traffic_label' in df.columns and 'advanced_traffic_label' in advanced_df.columns:
@@ -478,7 +478,7 @@ def run_advanced_analysis():
         
         # Calculate agreement
         agreement = (original_labels == advanced_labels).mean()
-        print(f"\n📊 CLASSIFICATION COMPARISON:")
+        print(f"\n? CLASSIFICATION COMPARISON:")
         print(f"   Original vs Advanced Agreement: {agreement:.3f}")
         
         # Distribution comparison
@@ -488,14 +488,14 @@ def run_advanced_analysis():
     # Research integration report
     generate_research_integration_report(analyzer, advanced_df)
     
-    print(f"\n🎉 BONUS INTEGRATION COMPLETED!")
+    print(f"\n? BONUS INTEGRATION COMPLETED!")
     print("=" * 60)
-    print("📚 RESEARCH PAPER INTEGRATION SUMMARY:")
-    print("   ✅ PoseRBPF: Particle filtering for spatial state estimation")
-    print("   ✅ KalmanNet: Neural Kalman filtering for state prediction")
-    print("   ✅ Advanced feature extraction with research-inspired metrics")
-    print("   ✅ Hybrid classification combining both approaches")
-    print(f"📁 Advanced results saved in: {advanced_results_folder}")
+    print("? RESEARCH PAPER INTEGRATION SUMMARY:")
+    print("   ? PoseRBPF: Particle filtering for spatial state estimation")
+    print("   ? KalmanNet: Neural Kalman filtering for state prediction")
+    print("   ? Advanced feature extraction with research-inspired metrics")
+    print("   ? Hybrid classification combining both approaches")
+    print(f"? Advanced results saved in: {advanced_results_folder}")
 
 def generate_research_integration_report(analyzer, advanced_df):
     """Generate comprehensive report on research integration"""
@@ -553,7 +553,7 @@ FILES GENERATED
     with open(report_path, 'w', encoding='utf-8') as f:
         f.write(report)
     
-    print(f"✅ Research integration report: {report_path}")
+    print(f"? Research integration report: {report_path}")
     
     # Create visualization
     plt.figure(figsize=(12, 8))

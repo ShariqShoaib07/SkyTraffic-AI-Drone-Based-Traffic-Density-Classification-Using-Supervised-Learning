@@ -34,14 +34,14 @@ def load_data_and_models():
     """
     Load dataset and trained models
     """
-    print("📊 LOADING DATA AND TRAINED MODELS...")
+    print("? LOADING DATA AND TRAINED MODELS...")
     
     # Load dataset
     if not os.path.exists(ml_ready_csv):
         raise FileNotFoundError("ML-ready dataset not found. Please run previous phases first.")
     
     df = pd.read_csv(ml_ready_csv)
-    print(f"✅ Loaded dataset with {len(df)} samples")
+    print(f"? Loaded dataset with {len(df)} samples")
     
     # Load models
     models = {}
@@ -62,13 +62,13 @@ def load_data_and_models():
 
         if os.path.exists(model_path):
             models[model_name] = joblib.load(model_path)
-            print(f"✅ Loaded {model_name} model")
+            print(f"? Loaded {model_name} model")
 
             if os.path.exists(scaler_path):
                 scalers[model_name] = joblib.load(scaler_path)
-                print(f"✅ Loaded {model_name} scaler")
+                print(f"? Loaded {model_name} scaler")
         else:
-            print(f"⚠️  {model_name} model not found at {model_path}")
+            print(f"??  {model_name} model not found at {model_path}")
     
     if not models:
         raise FileNotFoundError("No trained models found. Please run Phase 7 first.")
@@ -80,9 +80,9 @@ def load_data_and_models():
     if os.path.exists(selector_path) and os.path.exists(selected_features_path):
         selector = joblib.load(selector_path)
         selected_features = joblib.load(selected_features_path)
-        print(f"✅ Loaded feature selector with {len(selected_features)} features")
+        print(f"? Loaded feature selector with {len(selected_features)} features")
     else:
-        print("⚠️  Feature selector not found, using all features")
+        print("??  Feature selector not found, using all features")
         selector = None
         selected_features = [col for col in df.columns if col not in ['image_name', 'traffic_label']]
     
@@ -95,7 +95,7 @@ def create_data_distribution_plots(df):
     """
     Create comprehensive data distribution plots
     """
-    print("\n📈 CREATING DATA DISTRIBUTION PLOTS...")
+    print("\n? CREATING DATA DISTRIBUTION PLOTS...")
     
     # 1. Class Distribution Pie Chart
     plt.figure(figsize=(15, 12))
@@ -173,7 +173,7 @@ def create_data_distribution_plots(df):
     plt.tight_layout()
     distribution_plot_path = os.path.join(evaluation_folder, 'data_distribution_analysis.png')
     plt.savefig(distribution_plot_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved data distribution analysis: {distribution_plot_path}")
+    print(f"? Saved data distribution analysis: {distribution_plot_path}")
     plt.show()
     
     return class_counts
@@ -182,7 +182,7 @@ def create_feature_analysis_plots(df, selected_features):
     """
     Create detailed feature analysis plots
     """
-    print("\n🔍 CREATING DETAILED FEATURE ANALYSIS...")
+    print("\n? CREATING DETAILED FEATURE ANALYSIS...")
     
     # 1. Feature Importance Comparison
     plt.figure(figsize=(15, 10))
@@ -233,7 +233,7 @@ def create_feature_analysis_plots(df, selected_features):
     plt.tight_layout()
     feature_analysis_path = os.path.join(evaluation_folder, 'feature_analysis.png')
     plt.savefig(feature_analysis_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved feature analysis: {feature_analysis_path}")
+    print(f"? Saved feature analysis: {feature_analysis_path}")
     plt.show()
 
 # -----------------------------
@@ -243,7 +243,7 @@ def evaluate_all_models(df, models, scalers, selected_features, selector):
     """
     Comprehensive evaluation of all trained models
     """
-    print("\n🎯 COMPREHENSIVE MODEL EVALUATION...")
+    print("\n? COMPREHENSIVE MODEL EVALUATION...")
     
     # Prepare data
     X = df[selected_features]
@@ -263,7 +263,7 @@ def evaluate_all_models(df, models, scalers, selected_features, selector):
     evaluation_results = {}
     
     for model_name, model in models.items():
-        print(f"\n📊 EVALUATING {model_name.upper()}...")
+        print(f"\n? EVALUATING {model_name.upper()}...")
         
         # Prepare data for specific model
         if model_name in scalers:
@@ -294,13 +294,13 @@ def evaluate_all_models(df, models, scalers, selected_features, selector):
             'true_labels': y_test
         }
         
-        print(f"   ✅ Accuracy: {accuracy:.4f}")
-        print(f"   ✅ Precision: {precision:.4f}")
-        print(f"   ✅ Recall: {recall:.4f}")
-        print(f"   ✅ F1-Score: {f1:.4f}")
+        print(f"   ? Accuracy: {accuracy:.4f}")
+        print(f"   ? Precision: {precision:.4f}")
+        print(f"   ? Recall: {recall:.4f}")
+        print(f"   ? F1-Score: {f1:.4f}")
         
         # Detailed classification report
-        print(f"\n   📈 Detailed Classification Report:")
+        print(f"\n   ? Detailed Classification Report:")
         print(classification_report(y_test, y_pred, target_names=['Low', 'Medium', 'High']))
     
     return evaluation_results, X_test, y_test
@@ -312,7 +312,7 @@ def create_model_comparison_visualizations(evaluation_results):
     """
     Create comprehensive model comparison visualizations
     """
-    print("\n📊 CREATING MODEL COMPARISON VISUALIZATIONS...")
+    print("\n? CREATING MODEL COMPARISON VISUALIZATIONS...")
     
     # 1. Performance Metrics Comparison
     metrics_df = pd.DataFrame({
@@ -434,7 +434,7 @@ def create_model_comparison_visualizations(evaluation_results):
     plt.tight_layout()
     comparison_path = os.path.join(evaluation_folder, 'comprehensive_model_comparison.png')
     plt.savefig(comparison_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved comprehensive model comparison: {comparison_path}")
+    print(f"? Saved comprehensive model comparison: {comparison_path}")
     plt.show()
     
     return metrics_df
@@ -443,7 +443,7 @@ def create_detailed_performance_analysis(evaluation_results):
     """
     Create detailed performance analysis reports and visualizations
     """
-    print("\n📈 CREATING DETAILED PERFORMANCE ANALYSIS...")
+    print("\n? CREATING DETAILED PERFORMANCE ANALYSIS...")
     
     # Create performance summary table
     performance_data = []
@@ -461,13 +461,13 @@ def create_detailed_performance_analysis(evaluation_results):
     # Save performance table
     performance_csv_path = os.path.join(evaluation_folder, 'model_performance_metrics.csv')
     performance_df.to_csv(performance_csv_path, index=False)
-    print(f"✅ Saved performance metrics: {performance_csv_path}")
+    print(f"? Saved performance metrics: {performance_csv_path}")
     
     # Create best model analysis
     best_model = max(evaluation_results.items(), key=lambda x: x[1]['accuracy'])
     best_model_name, best_model_results = best_model
     
-    print(f"\n🏆 BEST PERFORMING MODEL: {best_model_name.upper()}")
+    print(f"\n? BEST PERFORMING MODEL: {best_model_name.upper()}")
     print(f"   Accuracy: {best_model_results['accuracy']:.4f}")
     print(f"   Precision: {best_model_results['precision']:.4f}")
     print(f"   Recall: {best_model_results['recall']:.4f}")
@@ -500,7 +500,7 @@ def create_detailed_performance_analysis(evaluation_results):
     
     best_cm_path = os.path.join(evaluation_folder, 'best_model_confusion_matrix.png')
     plt.savefig(best_cm_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved best model confusion matrix: {best_cm_path}")
+    print(f"? Saved best model confusion matrix: {best_cm_path}")
     plt.show()
     
     return performance_df, best_model_name
@@ -512,7 +512,7 @@ def generate_statistical_report(df, evaluation_results, performance_df, best_mod
     """
     Generate comprehensive statistical report with regression metrics
     """
-    print("\n📝 GENERATING STATISTICAL REPORT...")
+    print("\n? GENERATING STATISTICAL REPORT...")
 
     # Load regression model if available
     linreg_info = ""
@@ -546,11 +546,11 @@ LINEAR REGRESSION MODEL (Vehicle Count Prediction)
 ---------------------------------------------------
 Mean Squared Error: {mse_reg:.4f}
 Mean Absolute Error: {mae_reg:.4f}
-R² Score: {r2_reg:.4f}
+R? Score: {r2_reg:.4f}
 
 """
         except Exception as e:
-            print(f"⚠️  Could not evaluate linear regression: {e}")
+            print(f"??  Could not evaluate linear regression: {e}")
 
     report = f"""
 SKYTRAFFIC AI - STATISTICAL ANALYSIS REPORT
@@ -628,7 +628,7 @@ KEY FINDINGS
     with open(report_path, 'w', encoding='utf-8') as f:
         f.write(report)
 
-    print(f"✅ Saved statistical report: {report_path}")
+    print(f"? Saved statistical report: {report_path}")
 
     # Print report to console
     print("\n" + "="*60)
@@ -641,11 +641,11 @@ KEY FINDINGS
 # MAIN EXECUTION
 # -----------------------------
 def main():
-    print("🟥 PHASE 8 — STATISTICAL GRAPHS & MODEL EVALUATION")
+    print("? PHASE 8 ? STATISTICAL GRAPHS & MODEL EVALUATION")
     print("=" * 60)
-    print("📊 Creating comprehensive statistical analysis")
-    print("📈 Evaluating 6 classifiers + 1 regression model")
-    print("📝 Producing evaluation reports")
+    print("? Creating comprehensive statistical analysis")
+    print("? Evaluating 6 classifiers + 1 regression model")
+    print("? Producing evaluation reports")
     print("=" * 60)
     
     try:
@@ -672,23 +672,23 @@ def main():
         # 7. Generate statistical report
         report = generate_statistical_report(df, evaluation_results, performance_df, best_model_name, class_counts)
         
-        print(f"\n🎉 PHASE 8 COMPLETED SUCCESSFULLY!")
+        print(f"\n? PHASE 8 COMPLETED SUCCESSFULLY!")
         print("=" * 60)
-        print("📁 OUTPUT FILES GENERATED:")
-        print(f"   📊 Data distribution analysis: {evaluation_folder}/data_distribution_analysis.png")
-        print(f"   🔍 Feature analysis: {evaluation_folder}/feature_analysis.png")
-        print(f"   📈 Model comparisons: {evaluation_folder}/comprehensive_model_comparison.png")
-        print(f"   🎯 Performance metrics: {evaluation_folder}/model_performance_metrics.csv")
-        print(f"   📝 Statistical report: {evaluation_folder}/statistical_analysis_report.txt")
-        print(f"   🏆 Best model analysis: {evaluation_folder}/best_model_confusion_matrix.png")
-        print(f"\n📊 KEY FINDINGS:")
+        print("? OUTPUT FILES GENERATED:")
+        print(f"   ? Data distribution analysis: {evaluation_folder}/data_distribution_analysis.png")
+        print(f"   ? Feature analysis: {evaluation_folder}/feature_analysis.png")
+        print(f"   ? Model comparisons: {evaluation_folder}/comprehensive_model_comparison.png")
+        print(f"   ? Performance metrics: {evaluation_folder}/model_performance_metrics.csv")
+        print(f"   ? Statistical report: {evaluation_folder}/statistical_analysis_report.txt")
+        print(f"   ? Best model analysis: {evaluation_folder}/best_model_confusion_matrix.png")
+        print(f"\n? KEY FINDINGS:")
         best_accuracy = max([results['accuracy'] for results in evaluation_results.values()])
         print(f"   Best Model Accuracy: {best_accuracy:.4f}")
         print(f"   Total Visualizations: 6+ comprehensive charts")
         print(f"   Statistical Analysis: Complete")
         
     except Exception as e:
-        print(f"❌ Error in statistical analysis: {e}")
+        print(f"? Error in statistical analysis: {e}")
         import traceback
         traceback.print_exc()
 

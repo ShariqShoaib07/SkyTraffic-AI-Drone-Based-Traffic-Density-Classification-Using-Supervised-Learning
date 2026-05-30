@@ -48,9 +48,8 @@ TRAIN_PATIENCE = 15
 # USE_MIXED_PRECISION is defined before GPU initialization.
 
 # Vehicle classes - FOCUS ON ROAD VEHICLES ONLY
-# UPDATE THESE NAMES to match your dataset's actual class labels
-# class_0 = index 0 in your .txt files (104241), class_1 = index 1 (17256)
-VEHICLE_CLASSES = ['vehicle_type_0', 'vehicle_type_1']
+# class_0 = cars (129,122), class_1 = trucks/buses (17,256)
+VEHICLE_CLASSES = ['car', 'truck']
 NUM_CLASSES = len(VEHICLE_CLASSES)
 
 # DETECTION CONFIDENCE - LOWER FOR BETTER DETECTION
@@ -408,19 +407,23 @@ def main():
     total_vehicles = 0
     detection_stats = {class_name: 0 for class_name in actual_classes}
     traffic_distribution = {"Low": 0, "Medium": 0, "High": 0}
-    
+
     for img_idx, img_name in enumerate(image_files, 1):
         img_path = os.path.join(image_folder, img_name)
-        img = cv2.imread(img_path)
-        
-        if img is None:
-            print(f"❌ Could not load: {img_name}")
+        try:
+            img = cv2.imread(img_path)
+        except Exception as e:
+            print(f"Error reading {img_name}: {e}")
             continue
-        
+
+        if img is None:
+            print(f"Could not load: {img_name}")
+            continue
+
         # Clear memory periodically
         if img_idx % 10 == 0:
             clear_gpu_memory()
-        
+
         # Enhanced prediction WITHOUT road filtering
         try:
             results = model.predict(

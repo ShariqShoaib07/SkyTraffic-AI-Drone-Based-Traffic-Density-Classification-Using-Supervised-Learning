@@ -16,12 +16,13 @@ import math
 from sklearn.preprocessing import StandardScaler
 import joblib
 
-# USE_MIXED_PRECISION is defined before GPU initialization.
+# Define mixed precision before GPU initialization
+USE_MIXED_PRECISION = True
 
 # -----------------------------
 # GPU MEMORY OPTIMIZATION
 # -----------------------------
-print("🧹 Initializing GPU memory optimization...")
+print("Initializing GPU memory optimization...")
 torch.cuda.empty_cache()
 gc.collect()
 torch.backends.cudnn.benchmark = True
@@ -46,11 +47,10 @@ TRAIN_BATCH = 8
 TRAIN_DEVICE = 0
 TRAIN_WORKERS = 0
 TRAIN_PATIENCE = 15
-USE_MIXED_PRECISION = True
 
 # Vehicle classes
-# class_0 = index 0 in your .txt files (104241 detections), class_1 = index 1 (17256 detections)
-VEHICLE_CLASSES = ['vehicle_type_0', 'vehicle_type_1']
+# class_0 = cars (129,122 detections), class_1 = trucks/buses (17,726 detections)
+VEHICLE_CLASSES = ['car', 'truck']
 NUM_CLASSES = len(VEHICLE_CLASSES)
 
 # DETECTION CONFIDENCE
