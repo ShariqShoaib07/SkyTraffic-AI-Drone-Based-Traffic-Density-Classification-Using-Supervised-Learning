@@ -4,25 +4,30 @@ from pathlib import Path
 
 SOURCE_BASE = r"D:\UNI\Sem6\Machine Learning\Project\dataset\dataset"
 DEST_BASE = r"D:\UNI\Sem6\Machine Learning\Project\YOLODataset"
-SECTIONS = ["sec1", "sec2", "sec3", "sec4", "sec5", "sec6", "sec7"]
+SECTIONS = ["sec1", "sec2", "sec3", "sec4", "sec5", "sec6", "sec7",
+            "sec8", "sec9", "sec_a", "sec_b", "sec_c"]
 TRAIN_SPLIT = 0.85
 
 def collect_pairs(source_base, sections):
     pairs = []
     missing_labels = []
+    sections_found = []
+    sections_missing = []
     base_path = Path(source_base)
     for section in sections:
         section_path = base_path / section
         if not section_path.exists():
-            print(f"??  Missing folder: {section_path}")
+            print(f"Skipping {section} -- folder not found")
+            sections_missing.append(section)
             continue
+        sections_found.append(section)
         for img_path in section_path.glob("*.png"):
             label_path = img_path.with_suffix(".txt")
             if label_path.exists():
                 pairs.append((img_path, label_path))
             else:
                 missing_labels.append(img_path)
-    return pairs, missing_labels
+    return pairs, missing_labels, sections_found, sections_missing
 
 def ensure_dest_dirs(dest_base):
     dest_path = Path(dest_base)
@@ -44,7 +49,7 @@ def copy_pairs(pairs, images_dir, labels_dir):
 def main():
     random.seed(42)
     print("Collecting pairs...")
-    pairs, missing_labels = collect_pairs(SOURCE_BASE, SECTIONS)
+    pairs, missing_labels, sections_found, sections_missing = collect_pairs(SOURCE_BASE, SECTIONS)
     print(f"Found {len(pairs)} pairs")
     random.shuffle(pairs)
     train_count = int(len(pairs) * TRAIN_SPLIT)
@@ -55,14 +60,18 @@ def main():
     copy_pairs(train_pairs, train_images, train_labels)
     print(f"Copying {len(val_pairs)} val pairs...")
     copy_pairs(val_pairs, val_images, val_labels)
-    print("? Dataset restructure complete")
-    print(f"Total pairs found: {len(pairs)}")
-    print(f"Train count: {len(train_pairs)}")
-    print(f"Val count: {len(val_pairs)}")
-    if missing_labels:
-        print(f"Images without matching .txt labels: {len(missing_labels)}")
-    else:
-        print("Images without matching .txt labels: None")
+    print("\n" + "="*50)
+    print("DATASET RESTRUCTURE SUMMARY")
+    print("="*50)
+    print(f"Sections found:     {len(sections_found)} / 12")
+    print(f"Sections found:     {', '.join(sections_found) if sections_found else 'None'}")
+    if sections_missing:
+        print(f"Sections missing:   {', '.join(sections_missing)}")
+    print(f"Total image pairs:  {len(pairs)}")
+    print(f"Train pairs:        {len(train_pairs)}")
+    print(f"Val pairs:          {len(val_pairs)}")
+    print(f"Skipped (no .txt):  {len(missing_labels)} images")
+    print("="*50)
 
 if __name__ == "__main__":
     main()
