@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+
+# Data and generated outputs
+Results/
+runs/
+YOLODataset/
+dataset/
+
+# Model weights
+*.pt
+*.pth
+
+# Caches
+*.cache
+
+# Logs
+*.log
+
+# Archives
+*.zip
+
+# Editor/OS
+.vscode/
+.DS_Store
+Thumbs.db
