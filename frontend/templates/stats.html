@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistics - SkyTraffic AI{% endblock %}
+
+{% block content %}
+<div class="stats-page">
+    <h1>Project Statistics</h1>
+
+    <div class="stats-overview">
+        <div class="stat-item">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+                <div class="stat-value">2,321</div>
+                <div class="stat-name">Training Samples</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">🚗</div>
+            <div class="stat-info">
+                <div class="stat-value">88%</div>
+                <div class="stat-name">Cars</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">🚚</div>
+            <div class="stat-info">
+                <div class="stat-value">12%</div>
+                <div class="stat-name">Trucks</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-info">
+                <div class="stat-value">15</div>
+                <div class="stat-name">Selected Features</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="class-distribution">
+        <h2>Traffic Density Distribution</h2>
+        <div class="distribution-items">
+            <div class="distribution-item">
+                <div class="item-label">Low Traffic</div>
+                <div class="item-bar">
+                    <div class="bar-fill" style="width: 46%; background: #2ed573;"></div>
+                </div>
+                <div class="item-count">1,069 (46%)</div>
+            </div>
+            <div class="distribution-item">
+                <div class="item-label">Medium Traffic</div>
+                <div class="item-bar">
+                    <div class="bar-fill" style="width: 42%; background: #ffa502;"></div>
+                </div>
+                <div class="item-count">971 (42%)</div>
+            </div>
+            <div class="distribution-item">
+                <div class="item-label">High Traffic</div>
+                <div class="item-bar">
+                    <div class="bar-fill" style="width: 12%; background: #ff4757;"></div>
+                </div>
+                <div class="item-count">281 (12%)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="statistical-plots">
+        <h2>Statistical Analysis Plots</h2>
+        <div class="plots-grid" id="plotsGrid">
+            <!-- Loaded from API -->
+        </div>
+    </div>
+</div>
+
+<style>
+.stats-page {
+    margin-bottom: 60px;
+}
+
+.stats-page h1 {
+    text-align: center;
+    margin-bottom: 50px;
+    font-size: 2.5rem;
+    color: #e2e8f0;
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 60px;
+}
+
+.stat-item {
+    background: #1a1d27;
+    border: 1px solid #2a2d3e;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    border-color: #00d4aa;
+    box-shadow: 0 0 20px rgba(0, 212, 170, 0.1);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #00d4aa;
+}
+
+.stat-name {
+    font-size: 0.9rem;
+    color: #8892a4;
+    margin-top: 5px;
+}
+
+.class-distribution {
+    background: #1a1d27;
+    border: 1px solid #2a2d3e;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 60px;
+}
+
+.class-distribution h2 {
+    margin-top: 0;
+    color: #e2e8f0;
+    margin-bottom: 30px;
+}
+
+.distribution-items {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.distribution-item {
+    display: grid;
+    grid-template-columns: 100px 1fr 100px;
+    gap: 20px;
+    align-items: center;
+}
+
+.item-label {
+    color: #8892a4;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.item-bar {
+    height: 30px;
+    background: #0f1117;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #2a2d3e;
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.item-count {
+    text-align: right;
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.statistical-plots {
+    margin-top: 60px;
+}
+
+.statistical-plots h2 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    color: #e2e8f0;
+}
+
+.plots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+}
+
+.plot-card {
+    background: #1a1d27;
+    border: 1px solid #2a2d3e;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.plot-card:hover {
+    border-color: #00d4aa;
+    box-shadow: 0 0 20px rgba(0, 212, 170, 0.1);
+}
+
+.plot-title {
+    background: linear-gradient(135deg, #00d4aa 0%, #00a399 100%);
+    color: white;
+    padding: 15px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.plot-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    display: block;
+}
+</style>
+
+<script>
+fetch('/api/stats-images')
+    .then(res => res.json())
+    .then(images => {
+        const grid = document.getElementById('plotsGrid');
+        images.forEach(img => {
+            const card = document.createElement('div');
+            card.className = 'plot-card';
+            card.innerHTML = `
+                <div class="plot-title">${img.replace(/[_-]/g, ' ').replace('.png', '')}</div>
+                <img src="/api/stats-image/${img}" alt="${img}" class="plot-image">
+            `;
+            grid.appendChild(card);
+        });
+    })
+    .catch(err => console.error('Error loading stats:', err));
+</script>
+{% endblock %}

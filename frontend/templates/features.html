@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}Features - SkyTraffic AI{% endblock %}
+
+{% block content %}
+<div class="features-page">
+    <h1>Feature Analysis</h1>
+
+    <div class="features-intro">
+        <h2>Understanding the Features</h2>
+        <p>SkyTraffic AI extracts 24 traffic metrics from each image, capturing spatial distribution, vehicle composition, traffic patterns, and detection confidence. The top 15 features are used for classification.</p>
+    </div>
+
+    <div class="features-content">
+        <div class="features-chart">
+            <h3>Feature Values from Last Analysis</h3>
+            <div class="chart-container">
+                <canvas id="featureChart"></canvas>
+            </div>
+        </div>
+
+        <div class="features-table-container">
+            <h3>Feature Descriptions</h3>
+            <table class="features-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>vehicle_count</strong></td>
+                        <td>Total number of vehicles detected</td>
+                        <td>Count</td>
+                    </tr>
+                    <tr>
+                        <td><strong>density_score</strong></td>
+                        <td>Vehicle count normalized by image area</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>center_x_mean</strong></td>
+                        <td>Mean X position of vehicle centers (normalized)</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>center_y_mean</strong></td>
+                        <td>Mean Y position of vehicle centers (normalized)</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>bbox_area_mean</strong></td>
+                        <td>Average bounding box area across vehicles</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>bbox_area_std</strong></td>
+                        <td>Standard deviation of bounding box areas</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>aspect_ratio_mean</strong></td>
+                        <td>Average width-to-height ratio of vehicles</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>spread_area</strong></td>
+                        <td>Convex hull area of vehicle positions</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>spatial_entropy</strong></td>
+                        <td>Distribution randomness (0=clustered, 1=dispersed)</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>cluster_score</strong></td>
+                        <td>How clustered vehicles are (0=dispersed, 1=clustered)</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>road_utilization</strong></td>
+                        <td>Percentage of image width covered by vehicles</td>
+                        <td>Spatial</td>
+                    </tr>
+                    <tr>
+                        <td><strong>count_car</strong></td>
+                        <td>Number of cars detected</td>
+                        <td>Vehicle Type</td>
+                    </tr>
+                    <tr>
+                        <td><strong>count_truck</strong></td>
+                        <td>Number of trucks detected</td>
+                        <td>Vehicle Type</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ratio_car</strong></td>
+                        <td>Proportion of cars (0-1)</td>
+                        <td>Vehicle Type</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ratio_truck</strong></td>
+                        <td>Proportion of trucks (0-1)</td>
+                        <td>Vehicle Type</td>
+                    </tr>
+                    <tr>
+                        <td><strong>type_diversity</strong></td>
+                        <td>Entropy of vehicle type distribution</td>
+                        <td>Vehicle Type</td>
+                    </tr>
+                    <tr>
+                        <td><strong>heavy_vehicle_ratio</strong></td>
+                        <td>Proportion of trucks and buses</td>
+                        <td>Vehicle Type</td>
+                    </tr>
+                    <tr>
+                        <td><strong>lane_occupancy</strong></td>
+                        <td>Percentage of image height covered by vehicles</td>
+                        <td>Traffic Pattern</td>
+                    </tr>
+                    <tr>
+                        <td><strong>traffic_flow_score</strong></td>
+                        <td>Traffic flow uniformity (1=uniform, 0=scattered)</td>
+                        <td>Traffic Pattern</td>
+                    </tr>
+                    <tr>
+                        <td><strong>congestion_index</strong></td>
+                        <td>Combined density and concentration metric</td>
+                        <td>Traffic Pattern</td>
+                    </tr>
+                    <tr>
+                        <td><strong>speed_estimate</strong></td>
+                        <td>Estimated traffic speed (km/h, simplified)</td>
+                        <td>Traffic Pattern</td>
+                    </tr>
+                    <tr>
+                        <td><strong>confidence_mean</strong></td>
+                        <td>Average YOLO detection confidence</td>
+                        <td>Confidence</td>
+                    </tr>
+                    <tr>
+                        <td><strong>confidence_std</strong></td>
+                        <td>Standard deviation of YOLO confidences</td>
+                        <td>Confidence</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.features-page {
+    margin-bottom: 60px;
+}
+
+.features-page h1 {
+    text-align: center;
+    margin-bottom: 50px;
+    font-size: 2.5rem;
+    color: #e2e8f0;
+}
+
+.features-intro {
+    background: #1a1d27;
+    border: 1px solid #2a2d3e;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 50px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.features-intro h2 {
+    margin-top: 0;
+    color: #00d4aa;
+}
+
+.features-intro p {
+    color: #8892a4;
+    line-height: 1.6;
+}
+
+.features-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 50px;
+}
+
+.features-chart {
+    background: #1a1d27;
+    border: 1px solid #2a2d3e;
+    border-radius: 12px;
+    padding: 30px;
+}
+
+.features-chart h3 {
+    margin-top: 0;
+    color: #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.chart-container {
+    max-height: 400px;
+}
+
+.features-table-container {
+    background: #1a1d27;
+    border: 1px solid #2a2d3e;
+    border-radius: 12px;
+    padding: 30px;
+    overflow-x: auto;
+}
+
+.features-table-container h3 {
+    margin-top: 0;
+    color: #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.features-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #e2e8f0;
+}
+
+.features-table thead {
+    border-bottom: 2px solid #00d4aa;
+}
+
+.features-table th {
+    text-align: left;
+    padding: 15px;
+    color: #00d4aa;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.features-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #2a2d3e;
+    color: #8892a4;
+}
+
+.features-table tbody tr:hover {
+    background: #0f1117;
+}
+
+.features-table strong {
+    color: #e2e8f0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const lastAnalysis = localStorage.getItem('lastAnalysis');
+    if (lastAnalysis) {
+        const analysis = JSON.parse(lastAnalysis);
+        if (analysis.features) {
+            const labels = Object.keys(analysis.features).slice(0, 12);
+            const data = labels.map(label => {
+                const val = analysis.features[label];
+                return typeof val === 'number' ? val : 0;
+            });
+
+            const ctx = document.getElementById('featureChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Feature Values',
+                        data: data,
+                        borderColor: '#00d4aa',
+                        backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                        pointBackgroundColor: '#00d4aa',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#00d4aa'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            grid: { color: '#2a2d3e' },
+                            ticks: { color: '#8892a4' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#8892a4' }
+                        }
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

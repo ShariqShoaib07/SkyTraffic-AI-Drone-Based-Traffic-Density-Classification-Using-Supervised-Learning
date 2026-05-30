@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SkyTraffic AI{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <a href="/" class="navbar-brand">SkyTraffic AI</a>
+            </div>
+            <div class="navbar-center">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/analyze" class="nav-link">Analyze</a>
+                <a href="/models" class="nav-link">Models</a>
+                <a href="/features" class="nav-link">Features</a>
+                <a href="/stats" class="nav-link">Stats</a>
+            </div>
+            <div class="navbar-right">
+                <div class="demo-toggle">
+                    <input type="checkbox" id="demoToggle" class="toggle-checkbox">
+                    <label for="demoToggle" class="toggle-label">Demo</label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
