@@ -39,15 +39,15 @@ def load_and_prepare_data():
     """
     Load the extracted features and prepare for ML training
     """
-    print("📊 LOADING AND PREPARING DATA FOR ML TRAINING...")
+    print("[DATA] LOADING AND PREPARING DATA FOR ML TRAINING...")
     
     # Try to load ML-ready dataset first
     if os.path.exists(ml_ready_csv):
         df = pd.read_csv(ml_ready_csv)
-        print("✅ Loaded ML-ready dataset")
+        print("[OK] Loaded ML-ready dataset")
     elif os.path.exists(features_csv):
         df = pd.read_csv(features_csv)
-        print("✅ Loaded raw features dataset")
+        print("[OK] Loaded raw features dataset")
         
         # If raw features, we need to prepare them for ML
         feature_columns = [col for col in df.columns if col not in ['image_name', 'traffic_label']]
@@ -62,21 +62,21 @@ def load_and_prepare_data():
         # Save as ML-ready
         df.to_csv(ml_ready_csv, index=False)
         joblib.dump(scaler, os.path.join(output_folder, "feature_scaler.pkl"))
-        print("✅ Created ML-ready dataset from raw features")
+        print("[OK] Created ML-ready dataset from raw features")
     else:
         raise FileNotFoundError("No feature dataset found. Please run feature extraction first.")
     
-    print(f"📈 Dataset shape: {df.shape}")
-    print(f"📋 Columns: {list(df.columns)}")
+    print(f"[CHART] Dataset shape: {df.shape}")
+    print(f"[LIST] Columns: {list(df.columns)}")
     
     # Separate features and target
     feature_columns = [col for col in df.columns if col not in ['image_name', 'traffic_label']]
     X = df[feature_columns]
     y = df['traffic_label']
     
-    print(f"🎯 Features: {len(feature_columns)}")
-    print(f"🎯 Target classes: {y.unique()}")
-    print(f"🎯 Class distribution:\n{y.value_counts()}")
+    print(f"[TARGET] Features: {len(feature_columns)}")
+    print(f"[TARGET] Target classes: {y.unique()}")
+    print(f"[TARGET] Class distribution:\n{y.value_counts()}")
     
     return X, y, feature_columns, df
 
@@ -84,7 +84,7 @@ def explore_features(X, y, feature_columns):
     """
     Perform exploratory data analysis on features
     """
-    print("\n🔍 EXPLORATORY DATA ANALYSIS...")
+    print("\n[SEARCH] EXPLORATORY DATA ANALYSIS...")
     
     # Create feature importance plot using Random Forest
     rf = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -108,10 +108,10 @@ def explore_features(X, y, feature_columns):
     # Save the plot
     feature_plot_path = os.path.join(results_folder, 'feature_importance.png')
     plt.savefig(feature_plot_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved feature importance plot: {feature_plot_path}")
+    print(f"[OK] Saved feature importance plot: {feature_plot_path}")
     plt.show()
     
-    print("📊 Top 10 Most Important Features:")
+    print("[DATA] Top 10 Most Important Features:")
     for i, row in feature_importance_df.head(10).iterrows():
         print(f"   {row['feature']}: {row['importance']:.4f}")
     
@@ -121,7 +121,7 @@ def select_best_features(X, y, feature_columns, k=15):
     """
     Select best features using statistical tests
     """
-    print(f"\n🎯 SELECTING BEST {k} FEATURES...")
+    print(f"\n[TARGET] SELECTING BEST {k} FEATURES...")
     
     # Use SelectKBest for feature selection
     selector = SelectKBest(score_func=f_classif, k=min(k, X.shape[1]))
@@ -131,7 +131,7 @@ def select_best_features(X, y, feature_columns, k=15):
     selected_mask = selector.get_support()
     selected_features = [feature_columns[i] for i in range(len(feature_columns)) if selected_mask[i]]
     
-    print(f"✅ Selected {len(selected_features)} features:")
+    print(f"[OK] Selected {len(selected_features)} features:")
     for feature in selected_features:
         print(f"   - {feature}")
     
@@ -144,7 +144,7 @@ def train_random_forest(X_train, X_test, y_train, y_test, selected_features):
     """
     Train and evaluate Random Forest classifier
     """
-    print("\n🌲 TRAINING RANDOM FOREST CLASSIFIER...")
+    print("\n[TREE] TRAINING RANDOM FOREST CLASSIFIER...")
     
     # Simplified hyperparameter tuning for faster execution
     param_grid = {
@@ -166,7 +166,7 @@ def train_random_forest(X_train, X_test, y_train, y_test, selected_features):
     accuracy = accuracy_score(y_test, y_pred)
     cv_scores = cross_val_score(best_rf, X_train, y_train, cv=5)
     
-    print(f"✅ Random Forest Results:")
+    print(f"[OK] Random Forest Results:")
     print(f"   Best Parameters: {grid_search.best_params_}")
     print(f"   Test Accuracy: {accuracy:.4f}")
     print(f"   Cross-validation Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
@@ -177,7 +177,7 @@ def train_svm(X_train, X_test, y_train, y_test, selected_features):
     """
     Train and evaluate Support Vector Machine classifier
     """
-    print("\n⚡ TRAINING SUPPORT VECTOR MACHINE...")
+    print("\n[FAST] TRAINING SUPPORT VECTOR MACHINE...")
     
     # Scale features for SVM
     scaler = StandardScaler()
@@ -204,7 +204,7 @@ def train_svm(X_train, X_test, y_train, y_test, selected_features):
     accuracy = accuracy_score(y_test, y_pred)
     cv_scores = cross_val_score(best_svm, X_train_scaled, y_train, cv=5)
     
-    print(f"✅ SVM Results:")
+    print(f"[OK] SVM Results:")
     print(f"   Best Parameters: {grid_search.best_params_}")
     print(f"   Test Accuracy: {accuracy:.4f}")
     print(f"   Cross-validation Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
@@ -215,39 +215,194 @@ def train_mlp(X_train, X_test, y_train, y_test, selected_features):
     """
     Train and evaluate Multi-Layer Perceptron classifier
     """
-    print("\n🧠 TRAINING MULTI-LAYER PERCEPTRON...")
-    
+    print("\n[BRAIN] TRAINING MULTI-LAYER PERCEPTRON...")
+
     # Scale features for MLP
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-    
+
     # Simplified hyperparameter tuning
     param_grid = {
         'hidden_layer_sizes': [(50,), (100,)],
         'activation': ['relu'],
         'alpha': [0.001, 0.01]
     }
-    
+
     mlp = MLPClassifier(max_iter=1000, random_state=42)
     grid_search = GridSearchCV(mlp, param_grid, cv=3, scoring='accuracy', n_jobs=-1)
     grid_search.fit(X_train_scaled, y_train)
-    
+
     # Best model
     best_mlp = grid_search.best_estimator_
     y_pred = best_mlp.predict(X_test_scaled)
     y_pred_proba = best_mlp.predict_proba(X_test_scaled)
-    
+
     # Calculate metrics
     accuracy = accuracy_score(y_test, y_pred)
     cv_scores = cross_val_score(best_mlp, X_train_scaled, y_train, cv=5)
-    
-    print(f"✅ MLP Results:")
+
+    print(f"[OK] MLP Results:")
     print(f"   Best Parameters: {grid_search.best_params_}")
     print(f"   Test Accuracy: {accuracy:.4f}")
     print(f"   Cross-validation Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
-    
+
     return best_mlp, y_pred, y_pred_proba, accuracy, cv_scores.mean(), scaler
+
+def train_knn(X_train, X_test, y_train, y_test, selected_features):
+    """
+    Train and evaluate K-Nearest Neighbors classifier
+    """
+    print("\n[SEARCH] TRAINING K-NEAREST NEIGHBORS...")
+
+    from sklearn.neighbors import KNeighborsClassifier
+
+    # Hyperparameter tuning for KNN
+    param_grid = {
+        'n_neighbors': [3, 5, 7, 9],
+        'weights': ['distance', 'uniform'],
+        'metric': ['euclidean', 'manhattan']
+    }
+
+    knn = KNeighborsClassifier()
+    grid_search = GridSearchCV(knn, param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+    grid_search.fit(X_train, y_train)
+
+    # Best model
+    best_knn = grid_search.best_estimator_
+    y_pred = best_knn.predict(X_test)
+    y_pred_proba = best_knn.predict_proba(X_test)
+
+    # Calculate metrics
+    accuracy = accuracy_score(y_test, y_pred)
+    cv_scores = cross_val_score(best_knn, X_train, y_train, cv=5)
+
+    print(f"[OK] KNN Results:")
+    print(f"   Best Parameters: {grid_search.best_params_}")
+    print(f"   Test Accuracy: {accuracy:.4f}")
+    print(f"   Cross-validation Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
+
+    return best_knn, y_pred, y_pred_proba, accuracy, cv_scores.mean()
+
+def train_logistic_regression(X_train, X_test, y_train, y_test, selected_features):
+    """
+    Train and evaluate Logistic Regression classifier
+    """
+    print("\n[DATA] TRAINING LOGISTIC REGRESSION...")
+
+    from sklearn.linear_model import LogisticRegression
+
+    # Scale features for Logistic Regression
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    # Hyperparameter tuning
+    param_grid = {
+        'C': [0.1, 1, 10],
+        'solver': ['lbfgs', 'liblinear'],
+        'max_iter': [1000, 2000]
+    }
+
+    lr = LogisticRegression(random_state=42, multi_class='multinomial')
+    grid_search = GridSearchCV(lr, param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+    grid_search.fit(X_train_scaled, y_train)
+
+    # Best model
+    best_lr = grid_search.best_estimator_
+    y_pred = best_lr.predict(X_test_scaled)
+    y_pred_proba = best_lr.predict_proba(X_test_scaled)
+
+    # Calculate metrics
+    accuracy = accuracy_score(y_test, y_pred)
+    cv_scores = cross_val_score(best_lr, X_train_scaled, y_train, cv=5)
+
+    print(f"[OK] Logistic Regression Results:")
+    print(f"   Best Parameters: {grid_search.best_params_}")
+    print(f"   Test Accuracy: {accuracy:.4f}")
+    print(f"   Cross-validation Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
+
+    return best_lr, y_pred, y_pred_proba, accuracy, cv_scores.mean(), scaler
+
+def train_decision_tree(X_train, X_test, y_train, y_test, selected_features):
+    """
+    Train and evaluate Decision Tree classifier
+    """
+    print("\n[TREE] TRAINING DECISION TREE...")
+
+    from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
+
+    # Hyperparameter tuning
+    param_grid = {
+        'max_depth': [5, 10, 15],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4]
+    }
+
+    dt = DecisionTreeClassifier(random_state=42)
+    grid_search = GridSearchCV(dt, param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+    grid_search.fit(X_train, y_train)
+
+    # Best model
+    best_dt = grid_search.best_estimator_
+    y_pred = best_dt.predict(X_test)
+    y_pred_proba = best_dt.predict_proba(X_test)
+
+    # Calculate metrics
+    accuracy = accuracy_score(y_test, y_pred)
+    cv_scores = cross_val_score(best_dt, X_train, y_train, cv=5)
+
+    print(f"[OK] Decision Tree Results:")
+    print(f"   Best Parameters: {grid_search.best_params_}")
+    print(f"   Test Accuracy: {accuracy:.4f}")
+    print(f"   Cross-validation Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
+
+    # Export tree structure
+    tree_rules = export_text(best_dt, feature_names=selected_features)
+    tree_path = os.path.join(results_folder, 'decision_tree_rules.txt')
+    with open(tree_path, 'w') as f:
+        f.write(tree_rules)
+    print(f"[OK] Saved decision tree rules: {tree_path}")
+
+    # Plot tree structure
+    plt.figure(figsize=(25, 15))
+    plot_tree(best_dt, feature_names=selected_features, class_names=sorted(y_train.unique()),
+              filled=True, rounded=True, fontsize=10, max_depth=3)
+    tree_plot_path = os.path.join(results_folder, 'decision_tree_plot.png')
+    plt.savefig(tree_plot_path, dpi=300, bbox_inches='tight')
+    print(f"[OK] Saved decision tree plot: {tree_plot_path}")
+    plt.close()
+
+    return best_dt, y_pred, y_pred_proba, accuracy, cv_scores.mean()
+
+def train_linear_regression_vehicle_count(X_train, X_test, y_train_count, y_test_count):
+    """
+    Train Linear Regression to predict vehicle count (continuous value)
+    This feeds into density classification
+    """
+    print("\n[CHART] TRAINING LINEAR REGRESSION FOR VEHICLE COUNT...")
+
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+
+    # Train linear regression model
+    linreg = LinearRegression()
+    linreg.fit(X_train, y_train_count)
+
+    # Predictions
+    y_pred = linreg.predict(X_test)
+
+    # Calculate metrics
+    mse = mean_squared_error(y_test_count, y_pred)
+    mae = mean_absolute_error(y_test_count, y_pred)
+    r2 = r2_score(y_test_count, y_pred)
+
+    print(f"[OK] Linear Regression Results:")
+    print(f"   Mean Squared Error: {mse:.4f}")
+    print(f"   Mean Absolute Error: {mae:.4f}")
+    print(f"   R? Score: {r2:.4f}")
+
+    return linreg, y_pred, mse, mae, r2
 
 # -----------------------------
 # MODEL EVALUATION AND VISUALIZATION
@@ -256,10 +411,10 @@ def evaluate_model(model, model_name, X_test, y_test, y_pred, y_pred_proba, clas
     """
     Comprehensive model evaluation with visualizations
     """
-    print(f"\n📊 EVALUATING {model_name.upper()} MODEL...")
+    print(f"\n[DATA] EVALUATING {model_name.upper()} MODEL...")
     
     # Classification report
-    print(f"📈 Classification Report for {model_name}:")
+    print(f"[CHART] Classification Report for {model_name}:")
     print(classification_report(y_test, y_pred, target_names=class_names))
     
     # Confusion Matrix
@@ -275,7 +430,7 @@ def evaluate_model(model, model_name, X_test, y_test, y_pred, y_pred_proba, clas
     # Save confusion matrix
     cm_path = os.path.join(results_folder, f'confusion_matrix_{model_name.lower().replace(" ", "_")}.png')
     plt.savefig(cm_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved confusion matrix: {cm_path}")
+    print(f"[OK] Saved confusion matrix: {cm_path}")
     plt.show()
     
     # Feature importance (for Random Forest)
@@ -296,14 +451,14 @@ def evaluate_model(model, model_name, X_test, y_test, y_pred, y_pred_proba, clas
         # Save feature importance
         fi_path = os.path.join(results_folder, f'feature_importance_{model_name.lower().replace(" ", "_")}.png')
         plt.savefig(fi_path, dpi=300, bbox_inches='tight')
-        print(f"✅ Saved feature importance: {fi_path}")
+        print(f"[OK] Saved feature importance: {fi_path}")
         plt.show()
 
 def create_model_comparison_chart(model_results):
     """
     Create and save model comparison chart
     """
-    print("\n📊 CREATING MODEL COMPARISON CHART...")
+    print("\n[DATA] CREATING MODEL COMPARISON CHART...")
     
     comparison_df = pd.DataFrame(model_results)
     comparison_df = comparison_df.sort_values('accuracy', ascending=False)
@@ -340,7 +495,7 @@ def create_model_comparison_chart(model_results):
     # Save comparison chart
     comparison_path = os.path.join(results_folder, 'model_comparison_chart.png')
     plt.savefig(comparison_path, dpi=300, bbox_inches='tight')
-    print(f"✅ Saved model comparison chart: {comparison_path}")
+    print(f"[OK] Saved model comparison chart: {comparison_path}")
     plt.show()
     
     return comparison_df
@@ -349,7 +504,7 @@ def create_training_summary(comparison_df, feature_importance_df, selected_featu
     """
     Create comprehensive training summary with proper type conversion for JSON
     """
-    print("\n📝 CREATING TRAINING SUMMARY...")
+    print("\n? CREATING TRAINING SUMMARY...")
     
     # Convert numpy types to native Python types for JSON serialization
     def convert_to_serializable(obj):
@@ -402,7 +557,7 @@ def create_training_summary(comparison_df, feature_importance_df, selected_featu
     summary_path = os.path.join(results_folder, 'training_summary.json')
     with open(summary_path, 'w') as f:
         json.dump(summary, f, indent=4)
-    print(f"✅ Saved training summary: {summary_path}")
+    print(f"[OK] Saved training summary: {summary_path}")
     
     # Create readable text summary
     text_summary = f"""
@@ -438,7 +593,7 @@ TOP 5 FEATURES
     text_summary_path = os.path.join(results_folder, 'training_summary.txt')
     with open(text_summary_path, 'w') as f:
         f.write(text_summary)
-    print(f"✅ Saved text summary: {text_summary_path}")
+    print(f"[OK] Saved text summary: {text_summary_path}")
     
     # Print summary to console
     print("\n" + "="*50)
@@ -452,7 +607,7 @@ def save_models(trained_models):
     """
     Save all trained models and metadata
     """
-    print("\n💾 SAVING TRAINED MODELS...")
+    print("\n[SAVE] SAVING TRAINED MODELS...")
     
     for model_info in trained_models:
         model_name = model_info['name']
@@ -468,44 +623,45 @@ def save_models(trained_models):
             scaler_path = os.path.join(models_folder, f'{model_name}_scaler.pkl')
             joblib.dump(model_info['scaler'], scaler_path)
         
-        print(f"✅ Saved {model_name}: {model_path} (Accuracy: {accuracy:.4f})")
+        print(f"[OK] Saved {model_name}: {model_path} (Accuracy: {accuracy:.4f})")
     
-    print(f"📁 All models saved in: {models_folder}")
+    print(f"[FOLDER] All models saved in: {models_folder}")
 
 # -----------------------------
 # MAIN EXECUTION
 # -----------------------------
 def main():
-    print("🟥 PHASE 7 — SUPERVISED ML CLASSIFIER TRAINING")
+    print("[*] PHASE 7 -- SUPERVISED ML CLASSIFIER TRAINING")
     print("=" * 60)
-    print("🎯 Training Random Forest, SVM, and MLP classifiers")
-    print("🎯 Target: Traffic Density (Low/Medium/High)")
+    print("[*] Training 6 classifiers + 1 regression model")
+    print("[*] Classifiers: Random Forest, SVM, MLP, KNN, Logistic Regression, Decision Tree")
+    print("[*] Regression: Linear Regression (vehicle_count prediction)")
     print("=" * 60)
-    
+
     try:
         # 1. Load and prepare data
         X, y, feature_columns, df = load_and_prepare_data()
-        
+
         # 2. Explore features
         feature_importance_df = explore_features(X, y, feature_columns)
-        
+
         # 3. Select best features
         X_selected, selected_features, selector = select_best_features(X, y, feature_columns, k=15)
-        
+
         # 4. Split data
         X_train, X_test, y_train, y_test = train_test_split(
             X_selected, y, test_size=0.2, random_state=42, stratify=y
         )
-        
-        print(f"\n📊 DATA SPLIT:")
+
+        print(f"\n[DATA] DATA SPLIT:")
         print(f"   Training set: {X_train.shape[0]} samples")
         print(f"   Test set: {X_test.shape[0]} samples")
         print(f"   Features: {X_train.shape[1]}")
-        
-        # 5. Train models
+
+        # 5. Train classification models
         trained_models = []
         model_results = []
-        
+
         # Random Forest
         rf_model, rf_pred, rf_proba, rf_accuracy, rf_cv_score = train_random_forest(
             X_train, X_test, y_train, y_test, selected_features
@@ -522,7 +678,7 @@ def main():
             'cv_score': rf_cv_score
         })
         evaluate_model(rf_model, 'Random Forest', X_test, y_test, rf_pred, rf_proba, y.unique(), selected_features)
-        
+
         # SVM
         svm_model, svm_pred, svm_proba, svm_accuracy, svm_cv_score, svm_scaler = train_svm(
             X_train, X_test, y_train, y_test, selected_features
@@ -539,7 +695,7 @@ def main():
             'cv_score': svm_cv_score
         })
         evaluate_model(svm_model, 'SVM', X_test, y_test, svm_pred, svm_proba, y.unique(), selected_features)
-        
+
         # MLP
         mlp_model, mlp_pred, mlp_proba, mlp_accuracy, mlp_cv_score, mlp_scaler = train_mlp(
             X_train, X_test, y_train, y_test, selected_features
@@ -556,38 +712,137 @@ def main():
             'cv_score': mlp_cv_score
         })
         evaluate_model(mlp_model, 'MLP', X_test, y_test, mlp_pred, mlp_proba, y.unique(), selected_features)
-        
-        # 6. Create comparison chart
+
+        # KNN
+        knn_model, knn_pred, knn_proba, knn_accuracy, knn_cv_score = train_knn(
+            X_train, X_test, y_train, y_test, selected_features
+        )
+        trained_models.append({
+            'name': 'knn',
+            'model': knn_model,
+            'accuracy': knn_accuracy,
+            'scaler': None
+        })
+        model_results.append({
+            'model': 'KNN',
+            'accuracy': knn_accuracy,
+            'cv_score': knn_cv_score
+        })
+        evaluate_model(knn_model, 'KNN', X_test, y_test, knn_pred, knn_proba, y.unique(), selected_features)
+
+        # Logistic Regression
+        lr_model, lr_pred, lr_proba, lr_accuracy, lr_cv_score, lr_scaler = train_logistic_regression(
+            X_train, X_test, y_train, y_test, selected_features
+        )
+        trained_models.append({
+            'name': 'logistic_regression',
+            'model': lr_model,
+            'accuracy': lr_accuracy,
+            'scaler': lr_scaler
+        })
+        model_results.append({
+            'model': 'Logistic Regression',
+            'accuracy': lr_accuracy,
+            'cv_score': lr_cv_score
+        })
+        evaluate_model(lr_model, 'Logistic Regression', X_test, y_test, lr_pred, lr_proba, y.unique(), selected_features)
+
+        # Decision Tree
+        dt_model, dt_pred, dt_proba, dt_accuracy, dt_cv_score = train_decision_tree(
+            X_train, X_test, y_train, y_test, selected_features
+        )
+        trained_models.append({
+            'name': 'decision_tree',
+            'model': dt_model,
+            'accuracy': dt_accuracy,
+            'scaler': None
+        })
+        model_results.append({
+            'model': 'Decision Tree',
+            'accuracy': dt_accuracy,
+            'cv_score': dt_cv_score
+        })
+        evaluate_model(dt_model, 'Decision Tree', X_test, y_test, dt_pred, dt_proba, y.unique(), selected_features)
+
+        # 6. Train Linear Regression for vehicle count (continuous prediction)
+        print(f"\n[CHART] PREPARING LINEAR REGRESSION DATA...")
+
+        # For linear regression, we need vehicle_count as target
+        df_full = pd.read_csv(ml_ready_csv) if os.path.exists(ml_ready_csv) else None
+        if df_full is not None and 'vehicle_count' in df_full.columns:
+            # Get vehicle_count for all samples
+            vehicle_counts_all = df_full['vehicle_count'].values
+
+            # Remove vehicle_count from features if present
+            X_linreg = X_selected
+
+            # Split data for regression
+            X_train_lr, X_test_lr, y_train_lr, y_test_lr = train_test_split(
+                X_linreg, vehicle_counts_all,
+                test_size=0.2, random_state=42
+            )
+
+            # Train linear regression
+            linreg_model, lr_pred_values, mse, mae, r2 = train_linear_regression_vehicle_count(
+                X_train_lr, X_test_lr, y_train_lr, y_test_lr
+            )
+
+            # Save linear regression model
+            linreg_path = os.path.join(models_folder, 'linear_regression_model.pkl')
+            joblib.dump(linreg_model, linreg_path)
+            print(f"[OK] Saved linear regression model: {linreg_path}")
+
+            # Create scatter plot of actual vs predicted
+            plt.figure(figsize=(10, 6))
+            plt.scatter(y_test_lr, lr_pred_values, alpha=0.6, edgecolors='k')
+            plt.plot([y_test_lr.min(), y_test_lr.max()], [y_test_lr.min(), y_test_lr.max()], 'r--', lw=2)
+            plt.xlabel('Actual Vehicle Count', fontweight='bold')
+            plt.ylabel('Predicted Vehicle Count', fontweight='bold')
+            plt.title(f'Linear Regression: Vehicle Count Prediction (R?={r2:.4f})', fontsize=14, fontweight='bold')
+            plt.grid(True, alpha=0.3)
+            plt.tight_layout()
+
+            lr_plot_path = os.path.join(results_folder, 'linear_regression_predictions.png')
+            plt.savefig(lr_plot_path, dpi=300, bbox_inches='tight')
+            print(f"[OK] Saved linear regression plot: {lr_plot_path}")
+            plt.show()
+
+        # 7. Create comparison chart (classifiers only)
         comparison_df = create_model_comparison_chart(model_results)
-        
-        # 7. Create training summary
+
+        # 8. Create training summary (add regression metrics)
         summary = create_training_summary(comparison_df, feature_importance_df, selected_features, df, y)
-        
-        # 8. Save models
+
+        # 9. Save models
         save_models(trained_models)
-        
-        # 9. Save feature selector and metadata
+
+        # 10. Save feature selector and metadata
         joblib.dump(selector, os.path.join(models_folder, 'feature_selector.pkl'))
         joblib.dump(selected_features, os.path.join(models_folder, 'selected_features.pkl'))
-        
-        print(f"\n🎉 PHASE 7 COMPLETED SUCCESSFULLY!")
+
+        print(f"\n[SUCCESS] PHASE 7 COMPLETED SUCCESSFULLY!")
         print("=" * 60)
-        print("📊 FINAL RESULTS SUMMARY:")
-        print(f"   Best Model: {summary['best_model']}")
+        print("[DATA] FINAL RESULTS SUMMARY:")
+        print(f"   Best Classifier: {summary['best_model']}")
         print(f"   Best Accuracy: {summary['best_accuracy']:.4f}")
         print(f"   Features Used: {summary['feature_count']}")
         print(f"   Total Samples: {summary['total_samples']}")
         print(f"   Class Distribution: {summary['class_distribution']}")
-        print(f"\n📁 OUTPUT FILES CREATED:")
-        print(f"   📊 Model comparison chart: {results_folder}/model_comparison_chart.png")
-        print(f"   📝 Training summary: {results_folder}/training_summary.json")
-        print(f"   📝 Text summary: {results_folder}/training_summary.txt")
-        print(f"   🎯 Feature importance plots")
-        print(f"   📈 Confusion matrices")
-        print(f"   🤖 Trained models: {models_folder}/")
-        
+        if df_full is not None and 'vehicle_count' in df_full.columns:
+            print(f"   Linear Regression R?: {r2:.4f}")
+            print(f"   Linear Regression MAE: {mae:.4f}")
+        print(f"\n[FOLDER] OUTPUT FILES CREATED:")
+        print(f"   [DATA] Model comparison chart: {results_folder}/model_comparison_chart.png")
+        print(f"   ? Training summary: {results_folder}/training_summary.json")
+        print(f"   ? Text summary: {results_folder}/training_summary.txt")
+        print(f"   [TARGET] Feature importance plots")
+        print(f"   [CHART] Confusion matrices (6 classifiers)")
+        print(f"   [TREE] Decision tree rules and plot")
+        print(f"   [DATA] Linear regression scatter plot")
+        print(f"   ? Trained models: {models_folder}/ (7 models total)")
+
     except Exception as e:
-        print(f"❌ Error in ML training: {e}")
+        print(f"[ERROR] Error in ML training: {e}")
         import traceback
         traceback.print_exc()
 

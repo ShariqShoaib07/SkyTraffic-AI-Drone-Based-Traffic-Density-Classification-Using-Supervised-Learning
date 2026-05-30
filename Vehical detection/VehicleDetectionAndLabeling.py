@@ -49,8 +49,8 @@ TRAIN_PATIENCE = 15
 
 # Vehicle classes - FOCUS ON ROAD VEHICLES ONLY
 # UPDATE THESE NAMES to match your dataset's actual class labels
-# class_0 = index 0 in your .txt files, class_1 = index 1, etc.
-VEHICLE_CLASSES = ['class_0', 'class_1']
+# class_0 = index 0 in your .txt files (104241), class_1 = index 1 (17256)
+VEHICLE_CLASSES = ['vehicle_type_0', 'vehicle_type_1']
 NUM_CLASSES = len(VEHICLE_CLASSES)
 
 # DETECTION CONFIDENCE - LOWER FOR BETTER DETECTION

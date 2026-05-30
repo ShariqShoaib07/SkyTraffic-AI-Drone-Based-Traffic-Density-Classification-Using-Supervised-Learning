@@ -42,16 +42,15 @@ scaler_path = os.path.join(output_folder, "feature_scaler.pkl")
 # OPTIMIZED GPU SETTINGS
 TRAIN_EPOCHS = 15
 TRAIN_IMGSZ = 640
-TRAIN_BATCH = 32
+TRAIN_BATCH = 8
 TRAIN_DEVICE = 0
-TRAIN_WORKERS = 8
+TRAIN_WORKERS = 0
 TRAIN_PATIENCE = 15
 USE_MIXED_PRECISION = True
 
 # Vehicle classes
-# UPDATE THESE NAMES to match your dataset's actual class labels
-# class_0 = index 0 in your .txt files, class_1 = index 1, etc.
-VEHICLE_CLASSES = ['class_0', 'class_1']
+# class_0 = index 0 in your .txt files (104241 detections), class_1 = index 1 (17256 detections)
+VEHICLE_CLASSES = ['vehicle_type_0', 'vehicle_type_1']
 NUM_CLASSES = len(VEHICLE_CLASSES)
 
 # DETECTION CONFIDENCE

@@ -47,20 +47,23 @@ def load_data_and_models():
     models = {}
     model_files = {
         'random_forest': 'random_forest_model.pkl',
-        'svm': 'svm_model.pkl', 
-        'mlp': 'mlp_model.pkl'
+        'svm': 'svm_model.pkl',
+        'mlp': 'mlp_model.pkl',
+        'knn': 'knn_model.pkl',
+        'logistic_regression': 'logistic_regression_model.pkl',
+        'decision_tree': 'decision_tree_model.pkl'
     }
-    
+
     scalers = {}
-    
+
     for model_name, model_file in model_files.items():
         model_path = os.path.join(models_folder, model_file)
         scaler_path = os.path.join(models_folder, f"{model_name}_scaler.pkl")
-        
+
         if os.path.exists(model_path):
             models[model_name] = joblib.load(model_path)
             print(f"✅ Loaded {model_name} model")
-            
+
             if os.path.exists(scaler_path):
                 scalers[model_name] = joblib.load(scaler_path)
                 print(f"✅ Loaded {model_name} scaler")
@@ -507,10 +510,48 @@ def create_detailed_performance_analysis(evaluation_results):
 # -----------------------------
 def generate_statistical_report(df, evaluation_results, performance_df, best_model_name, class_counts):
     """
-    Generate comprehensive statistical report without Unicode characters
+    Generate comprehensive statistical report with regression metrics
     """
     print("\n📝 GENERATING STATISTICAL REPORT...")
-    
+
+    # Load regression model if available
+    linreg_info = ""
+    linreg_path = os.path.join(models_folder, 'linear_regression_model.pkl')
+    if os.path.exists(linreg_path):
+        try:
+            linreg_model = joblib.load(linreg_path)
+            from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+            from sklearn.model_selection import train_test_split
+
+            # Prepare data for regression evaluation
+            ml_ready_csv_path = os.path.join(output_folder, "ml_ready_dataset.csv")
+            if os.path.exists(ml_ready_csv_path):
+                df_reg = pd.read_csv(ml_ready_csv_path)
+                if 'vehicle_count' in df_reg.columns:
+                    feature_columns = [col for col in df_reg.columns if col not in ['image_name', 'traffic_label', 'vehicle_count']]
+                    X_reg = df_reg[feature_columns]
+                    y_reg = df_reg['vehicle_count']
+
+                    X_train_r, X_test_r, y_train_r, y_test_r = train_test_split(
+                        X_reg, y_reg, test_size=0.2, random_state=42
+                    )
+
+                    y_pred_reg = linreg_model.predict(X_test_r)
+                    mse_reg = mean_squared_error(y_test_r, y_pred_reg)
+                    mae_reg = mean_absolute_error(y_test_r, y_pred_reg)
+                    r2_reg = r2_score(y_test_r, y_pred_reg)
+
+                    linreg_info = f"""
+LINEAR REGRESSION MODEL (Vehicle Count Prediction)
+---------------------------------------------------
+Mean Squared Error: {mse_reg:.4f}
+Mean Absolute Error: {mae_reg:.4f}
+R² Score: {r2_reg:.4f}
+
+"""
+        except Exception as e:
+            print(f"⚠️  Could not evaluate linear regression: {e}")
+
     report = f"""
 SKYTRAFFIC AI - STATISTICAL ANALYSIS REPORT
 ===========================================
@@ -526,48 +567,50 @@ Class Distribution:
   - Medium Traffic: {class_counts.get('Medium', 0):,} samples ({class_counts.get('Medium', 0)/len(df)*100:.1f}%)
   - High Traffic: {class_counts.get('High', 0):,} samples ({class_counts.get('High', 0)/len(df)*100:.1f}%)
 
-MODEL PERFORMANCE SUMMARY
--------------------------
+CLASSIFIER PERFORMANCE SUMMARY
+------------------------------
 Best Performing Model: {best_model_name.title()}
 
 Detailed Performance Metrics:
 {performance_df.to_string(index=False)}
 
+{linreg_info}
 KEY FINDINGS
 ------------
 """
 
     # Add key findings based on performance
     best_accuracy = max([results['accuracy'] for results in evaluation_results.values()])
-    
+
     if best_accuracy >= 0.9:
         report += "*** EXCELLENT PERFORMANCE: Models achieve over 90% accuracy\n"
     elif best_accuracy >= 0.8:
-        report += "*** GOOD PERFORMANCE: Models achieve 80-90% accuracy\n" 
+        report += "*** GOOD PERFORMANCE: Models achieve 80-90% accuracy\n"
     elif best_accuracy >= 0.7:
         report += "*** MODERATE PERFORMANCE: Models achieve 70-80% accuracy\n"
     else:
         report += "*** POOR PERFORMANCE: Models below 70% accuracy - consider feature engineering\n"
-    
+
     # Add class-wise performance insights
     report += f"\nCLASSIFICATION INSIGHTS:\n"
     report += f"- Best model accuracy: {best_accuracy:.1%}\n"
-    
+    report += f"- Number of classifiers evaluated: {len(evaluation_results)}\n"
+
     # Check for class imbalance issues
     min_class = min(class_counts.values)
     max_class = max(class_counts.values)
     imbalance_ratio = max_class / min_class if min_class > 0 else float('inf')
-    
+
     if imbalance_ratio > 2:
         report += f"- *** Class imbalance detected (ratio: {imbalance_ratio:.1f}:1)\n"
     else:
         report += f"- *** Balanced dataset (ratio: {imbalance_ratio:.1f}:1)\n"
-    
+
     # Add model-specific insights
     report += f"\nMODEL-SPECIFIC INSIGHTS:\n"
     for model_name, results in evaluation_results.items():
         report += f"- {model_name.title()}: Accuracy = {results['accuracy']:.3f}, F1-Score = {results['f1_score']:.3f}\n"
-    
+
     # Add recommendations
     report += f"\nRECOMMENDATIONS:\n"
     if best_accuracy >= 0.85:
@@ -579,20 +622,20 @@ KEY FINDINGS
     else:
         report += "- Model performance needs significant improvement\n"
         report += "- Consider collecting more data and trying different algorithms\n"
-    
+
     # Save report with UTF-8 encoding to handle any special characters
     report_path = os.path.join(evaluation_folder, 'statistical_analysis_report.txt')
     with open(report_path, 'w', encoding='utf-8') as f:
         f.write(report)
-    
+
     print(f"✅ Saved statistical report: {report_path}")
-    
+
     # Print report to console
     print("\n" + "="*60)
     print("STATISTICAL ANALYSIS REPORT SUMMARY")
     print("="*60)
     print(report)
-    
+
     return report
 # -----------------------------
 # MAIN EXECUTION
@@ -601,7 +644,7 @@ def main():
     print("🟥 PHASE 8 — STATISTICAL GRAPHS & MODEL EVALUATION")
     print("=" * 60)
     print("📊 Creating comprehensive statistical analysis")
-    print("📈 Generating performance visualizations") 
+    print("📈 Evaluating 6 classifiers + 1 regression model")
     print("📝 Producing evaluation reports")
     print("=" * 60)
     
