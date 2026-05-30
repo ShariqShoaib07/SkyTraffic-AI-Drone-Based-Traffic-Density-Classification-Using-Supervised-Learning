@@ -28,11 +28,12 @@ STATS_DIR = RESULTS_DIR / "statistical_analysis"
 FRONTEND_DIR = Path(__file__).parent
 SAMPLE_IMAGES_DIR = FRONTEND_DIR / "static" / "sample_images"
 
-DEMO_MODE = os.getenv('DEMO_MODE', 'false').lower() == 'true'
+DEMO_MODE = os.getenv('DEMO_MODE', 'true').lower() == 'true'
 CONFIDENCE_THRESHOLD = 0.25
 IOU_THRESHOLD = 0.45
 
 models = {}
+model_scalers = {}
 feature_scaler = None
 feature_selector = None
 yolo_model = None
@@ -44,7 +45,7 @@ print("=" * 60)
 print(f"Demo Mode: {DEMO_MODE}")
 
 def load_models():
-    global models, feature_scaler, feature_selector, yolo_model, sample_cache
+    global models, model_scalers, feature_scaler, feature_selector, yolo_model, sample_cache
 
     print("📦 Loading ML models...")
     model_files = {
@@ -54,6 +55,7 @@ def load_models():
         'mlp': 'mlp_model.pkl',
         'svm': 'svm_model.pkl',
         'knn': 'knn_model.pkl',
+        'linear_regression': 'linear_regression_model.pkl',
     }
 
     for name, filename in model_files.items():
@@ -73,6 +75,14 @@ def load_models():
     if selector_path.exists():
         feature_selector = joblib.load(selector_path)
         print(f"  ✓ feature_selector")
+
+    print("📊 Loading model-specific scalers...")
+    scaler_names = ['logistic_regression_scaler', 'mlp_scaler', 'svm_scaler']
+    for scaler_name in scaler_names:
+        path = MODELS_DIR / f"{scaler_name}.pkl"
+        if path.exists():
+            model_scalers[scaler_name] = joblib.load(path)
+            print(f"  ✓ {scaler_name}")
 
     print("🎯 Loading YOLO model...")
     yolo_weights = PROJECT_DIR / "runs" / "detect" / "train" / "weights" / "best.pt"
@@ -328,34 +338,42 @@ def classify_traffic_density(vehicle_count):
         return "High"
 
 def get_predictions(features_dict):
-    global models, feature_selector, feature_scaler
+    global models, model_scalers, feature_selector, feature_scaler
 
     predictions = {}
 
     feature_cols = [col for col in features_dict.keys() if col not in ['vehicle_count', 'traffic_label']]
     features_array = np.array([features_dict[col] for col in feature_cols]).reshape(1, -1)
 
+    # Apply feature selector
     if feature_selector is not None:
         try:
             features_array = feature_selector.transform(features_array)
-        except:
+        except Exception as e:
+            print(f"Feature selector error: {e}")
             pass
 
-    if feature_scaler is not None:
-        try:
-            features_array = feature_scaler.transform(features_array)
-        except:
-            pass
-
+    # Make predictions with each model
     for model_name, model in models.items():
         try:
-            if model_name == 'linear_regression_model':
-                pred = model.predict(features_array)[0]
+            # Apply model-specific scaler if available
+            test_features = features_array.copy()
+
+            if model_name in ['logistic_regression', 'mlp', 'svm']:
+                scaler_key = f"{model_name}_scaler"
+                if scaler_key in model_scalers:
+                    test_features = model_scalers[scaler_key].transform(test_features)
+            else:
+                # Tree-based models don't need scaling, but check shape
+                pass
+
+            pred = model.predict(test_features)[0]
+            if model_name == 'linear_regression':
                 predictions['linear_regression'] = float(pred)
             else:
-                pred = model.predict(features_array)[0]
                 predictions[model_name] = str(pred)
         except Exception as e:
+            print(f"Error predicting with {model_name}: {e}, features shape: {features_array.shape}")
             predictions[model_name] = "Error"
 
     return predictions
