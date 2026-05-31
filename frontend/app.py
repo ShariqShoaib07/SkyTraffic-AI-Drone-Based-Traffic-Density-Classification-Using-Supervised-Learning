@@ -49,7 +49,7 @@ RAW_FEATURE_COLUMNS = [
     'vehicle_count', 'density_score', 'center_x_mean', 'center_y_mean',
     'bbox_area_mean', 'bbox_area_std', 'aspect_ratio_mean', 'spread_area',
     'spatial_entropy', 'cluster_score', 'road_utilization', 'count_car',
-    'count_truck', 'ratio_car', 'ratio_truck', 'type_diversity',
+    'count_motorcycle', 'ratio_car', 'ratio_motorcycle', 'type_diversity',
     'heavy_vehicle_ratio', 'lane_occupancy', 'traffic_flow_score',
     'congestion_index', 'speed_estimate', 'confidence_mean', 'confidence_std'
 ]
@@ -250,7 +250,7 @@ def extract_vehicle_type_features(class_counts, actual_classes):
 
     max_entropy = math.log2(len(actual_classes)) if len(actual_classes) > 0 else 1.0
     features['type_diversity'] = type_entropy / max_entropy if max_entropy > 0 else 0.0
-    heavy_vehicles = class_counts.get('truck', 0) + class_counts.get('bus', 0)
+    heavy_vehicles = class_counts.get('motorcycle', 0)
     features['heavy_vehicle_ratio'] = heavy_vehicles / total_vehicles if total_vehicles > 0 else 0.0
 
     return features
@@ -327,7 +327,7 @@ def run_yolo_detection(image_path):
     )
 
     vehicle_count = 0
-    class_counts = {'car': 0, 'truck': 0}
+    class_counts = {'car': 0, 'motorcycle': 0}
     valid_detections = []
 
     if results and results[0].boxes is not None and len(results[0].boxes) > 0:
@@ -337,7 +337,7 @@ def run_yolo_detection(image_path):
 
         for bbox, cls, conf in zip(boxes, classes, confidences):
             cls_int = int(cls)
-            class_name = 'car' if cls_int == 0 else 'truck'
+            class_name = 'car' if cls_int == 0 else 'motorcycle'
 
             if conf >= CONFIDENCE_THRESHOLD:
                 vehicle_count += 1
@@ -492,7 +492,7 @@ def predict():
         if annotated_image is None:
             return jsonify({'status': 'error', 'message': 'YOLO detection failed'}), 500
 
-        features = extract_all_features(valid_detections, class_counts, img.shape, ['car', 'truck'])
+        features = extract_all_features(valid_detections, class_counts, img.shape, ['car', 'motorcycle'])
         app.logger.info(f"Step 3: features extracted: {len(features)} features")
         predictions = get_predictions(features)
         app.logger.info(f"Step 4: predictions: {predictions}")
@@ -504,12 +504,16 @@ def predict():
         features_dict = {k: float(v) if isinstance(v, (int, np.integer, np.floating)) else v
                         for k, v in features.items()}
 
+        lr_prediction = float(predictions.get('linear_regression', 0))
+        lr_prediction = max(0, round(lr_prediction, 1))
+        predictions['linear_regression'] = lr_prediction
+
         response = {
             'status': 'success',
             'image': f'data:image/jpeg;base64,{img_base64}',
             'vehicle_count': vehicle_count,
             'car_count': class_counts.get('car', 0),
-            'truck_count': class_counts.get('truck', 0),
+            'motorcycle_count': class_counts.get('motorcycle', 0),
             'traffic_label': traffic_label,
             'predictions': predictions,
             'features': features_dict
@@ -553,7 +557,7 @@ def demo(image_name):
         'image': f'data:image/jpeg;base64,{img_base64}',
         'vehicle_count': int(cached.get('vehicle_count', 0)),
         'car_count': int(cached.get('car_count', 0)),
-        'truck_count': int(cached.get('truck_count', 0)),
+        'motorcycle_count': int(cached.get('motorcycle_count', cached.get('truck_count', 0))),
         'traffic_label': cached.get('traffic_label', 'Low'),
         'predictions': predictions,
         'features': dict(cached.get('features', {}))

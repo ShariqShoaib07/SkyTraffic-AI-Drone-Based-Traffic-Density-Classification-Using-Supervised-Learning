@@ -46,7 +46,7 @@ def regenerate_cache(server_url="http://localhost:5000", demo_mode_off=False):
                         'image_path': f'sample_{idx}.jpg',
                         'vehicle_count': int(data['vehicle_count']),
                         'car_count': int(data['car_count']),
-                        'truck_count': int(data['truck_count']),
+                        'motorcycle_count': int(data['motorcycle_count']),
                         'traffic_label': data['traffic_label'],
                         'predictions': {
                             'random_forest': data['predictions'].get('random_forest', 'Low'),

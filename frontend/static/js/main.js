@@ -195,7 +195,7 @@ function displayPredictions(data) {
 
     document.getElementById('totalCount').textContent = data.vehicle_count;
     document.getElementById('carCount').textContent = data.car_count;
-    document.getElementById('truckCount').textContent = data.truck_count;
+    document.getElementById('motorcycleCount').textContent = data.motorcycle_count;
 
     const grid = document.getElementById('predictionsGrid');
     if (grid) {
@@ -216,7 +216,11 @@ function displayPredictions(data) {
     const lrCount = document.getElementById('lrCount');
     if (lrCount) {
         const lr = data.predictions ? data.predictions.linear_regression : null;
-        lrCount.textContent = typeof lr === 'number' ? lr.toFixed(1) : 'N/A';
+        let lrValue = 'N/A';
+        if (typeof lr === 'number') {
+            lrValue = Math.max(0, Math.round(lr));
+        }
+        lrCount.textContent = lrValue;
     }
 
     hideLoading();
