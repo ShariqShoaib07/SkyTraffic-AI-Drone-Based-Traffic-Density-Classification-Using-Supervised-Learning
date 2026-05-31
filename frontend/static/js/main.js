@@ -5,10 +5,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 let demoMode = false;
+let selectedFile = null;
 
 function setupDemoToggle() {
     const toggle = document.getElementById('demoToggle');
     if (toggle) {
+        demoMode = toggle.checked;
         toggle.addEventListener('change', function() {
             demoMode = this.checked;
             console.log('Demo mode:', demoMode);
@@ -17,69 +19,84 @@ function setupDemoToggle() {
 }
 
 function setupUploadHandlers() {
-    const uploadArea = document.getElementById('uploadArea');
+    const chooseButton = document.getElementById('chooseImageBtn');
     const fileInput = document.getElementById('fileInput');
+    const analyzeButton = document.getElementById('analyzeBtn');
 
-    if (!uploadArea) return;
+    if (!chooseButton || !fileInput || !analyzeButton) return;
 
-    uploadArea.addEventListener('click', () => fileInput.click());
-
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length) handleFileSelect(files[0]);
-    });
+    chooseButton.addEventListener('click', () => fileInput.click());
 
     fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) handleFileSelect(e.target.files[0]);
+        if (e.target.files.length) {
+            previewSelectedFile(e.target.files[0]);
+        }
     });
+
+    analyzeButton.addEventListener('click', analyzeSelectedFile);
 }
 
-function handleFileSelect(file) {
+function previewSelectedFile(file) {
     if (!file.type.startsWith('image/')) {
         alert('Please select an image file');
         return;
     }
 
+    selectedFile = file;
+
+    const fileName = document.getElementById('selectedFileName');
+    const previewImage = document.getElementById('imagePreview');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const analyzeButton = document.getElementById('analyzeBtn');
+
+    if (fileName) fileName.textContent = file.name;
+    if (analyzeButton) analyzeButton.disabled = false;
+
     const reader = new FileReader();
     reader.onload = (e) => {
-        displayResults();
-        showLoading();
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        fetch('/predict', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                displayPredictions(data);
-                localStorage.setItem('lastAnalysis', JSON.stringify(data));
-            } else {
-                alert('Error: ' + (data.error || 'Unknown error'));
-                hideLoading();
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            alert('Error uploading image: ' + err.message);
-            hideLoading();
-        });
+        if (previewImage) {
+            previewImage.src = e.target.result;
+            previewImage.style.display = 'block';
+        }
+        if (previewPlaceholder) {
+            previewPlaceholder.style.display = 'none';
+        }
     };
     reader.readAsDataURL(file);
+}
+
+function analyzeSelectedFile() {
+    if (!selectedFile) {
+        alert('Please choose an image first');
+        return;
+    }
+
+    displayResults();
+    showLoading();
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    fetch('/predict', {
+        method: 'POST',
+        body: formData
+    })
+    .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok || data.status !== 'success') {
+            throw new Error(data.message || data.error || 'Unknown error');
+        }
+        return data;
+    })
+    .then(data => {
+        displayPredictions(data);
+        localStorage.setItem('lastAnalysis', JSON.stringify(data));
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Error analyzing image: ' + err.message);
+        hideLoading();
+    });
 }
 
 function setupSampleImages() {
@@ -87,11 +104,31 @@ function setupSampleImages() {
     samples.forEach(img => {
         img.addEventListener('click', function() {
             const sampleName = this.dataset.sample;
-            if (demoMode) {
-                loadDemoImage(sampleName);
-            }
+            showSamplePreview(sampleName, this.src);
+            loadDemoImage(sampleName);
         });
     });
+}
+
+function showSamplePreview(sampleName, src) {
+    selectedFile = null;
+
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('selectedFileName');
+    const previewImage = document.getElementById('imagePreview');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const analyzeButton = document.getElementById('analyzeBtn');
+
+    if (fileInput) fileInput.value = '';
+    if (fileName) fileName.textContent = sampleName;
+    if (analyzeButton) analyzeButton.disabled = true;
+    if (previewImage) {
+        previewImage.src = src;
+        previewImage.style.display = 'block';
+    }
+    if (previewPlaceholder) {
+        previewPlaceholder.style.display = 'none';
+    }
 }
 
 function loadDemoImage(sampleName) {
@@ -99,15 +136,16 @@ function loadDemoImage(sampleName) {
     showLoading();
 
     fetch(`/demo/${sampleName}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                displayPredictions(data);
-                localStorage.setItem('lastAnalysis', JSON.stringify(data));
-            } else {
-                alert('Error: ' + (data.error || 'Unknown error'));
-                hideLoading();
+        .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok || data.status !== 'success') {
+                throw new Error(data.message || data.error || 'Unknown error');
             }
+            return data;
+        })
+        .then(data => {
+            displayPredictions(data);
+            localStorage.setItem('lastAnalysis', JSON.stringify(data));
         })
         .catch(err => {
             console.error('Error:', err);
@@ -162,9 +200,9 @@ function displayPredictions(data) {
     const grid = document.getElementById('predictionsGrid');
     if (grid) {
         grid.innerHTML = '';
-        const models = ['random_forest', 'decision_tree', 'logistic_regression', 'mlp', 'svm', 'knn'];
-        models.forEach(model => {
-            const pred = data.predictions[model] || 'N/A';
+        const modelNames = ['random_forest', 'decision_tree', 'logistic_regression', 'mlp', 'svm', 'knn'];
+        modelNames.forEach(model => {
+            const pred = data.predictions && data.predictions[model] ? data.predictions[model] : 'N/A';
             const badge = document.createElement('div');
             badge.className = 'prediction-badge';
             badge.innerHTML = `
@@ -177,7 +215,7 @@ function displayPredictions(data) {
 
     const lrCount = document.getElementById('lrCount');
     if (lrCount) {
-        const lr = data.predictions.linear_regression;
+        const lr = data.predictions ? data.predictions.linear_regression : null;
         lrCount.textContent = typeof lr === 'number' ? lr.toFixed(1) : 'N/A';
     }
 
