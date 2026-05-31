@@ -1,11 +1,12 @@
 import random
 import shutil
+import os
 from pathlib import Path
 
 SOURCE_BASE = r"D:\UNI\Sem6\Machine Learning\Project\dataset\dataset"
 DEST_BASE = r"D:\UNI\Sem6\Machine Learning\Project\YOLODataset"
 SECTIONS = ["sec1", "sec2", "sec3", "sec4", "sec5", "sec6", "sec7",
-            "sec8", "sec9", "sec_a", "sec_b", "sec_c"]
+            "sec8", "sec9", "seca", "secb", "secc"]
 TRAIN_SPLIT = 0.85
 
 def collect_pairs(source_base, sections):
@@ -48,6 +49,11 @@ def copy_pairs(pairs, images_dir, labels_dir):
 
 def main():
     random.seed(42)
+    yolo_path = DEST_BASE
+    if os.path.exists(yolo_path):
+        print(f"Clearing old YOLODataset...")
+        shutil.rmtree(yolo_path)
+        print("Cleared.")
     print("Collecting pairs...")
     pairs, missing_labels, sections_found, sections_missing = collect_pairs(SOURCE_BASE, SECTIONS)
     print(f"Found {len(pairs)} pairs")

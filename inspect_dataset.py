@@ -3,7 +3,7 @@ from collections import Counter
 
 SOURCE_BASE = r"D:\UNI\Sem6\Machine Learning\Project\dataset\dataset"
 SECTIONS = ["sec1", "sec2", "sec3", "sec4", "sec5", "sec6", "sec7",
-            "sec8", "sec9", "sec_a", "sec_b", "sec_c"]
+            "sec8", "sec9", "seca", "secb", "secc"]
 
 
 def collect_class_counts(base_path, sections):
