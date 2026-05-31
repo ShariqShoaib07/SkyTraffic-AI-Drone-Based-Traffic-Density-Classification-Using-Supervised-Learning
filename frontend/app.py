@@ -2,6 +2,8 @@ import os
 import json
 import base64
 import math
+import logging
+import tempfile
 import cv2
 import numpy as np
 import pandas as pd
@@ -18,6 +20,8 @@ warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+app.logger.setLevel(logging.INFO)
 
 BASE_DIR = Path(__file__).parent.parent
 PROJECT_DIR = BASE_DIR
@@ -28,7 +32,7 @@ STATS_DIR = RESULTS_DIR / "statistical_analysis"
 FRONTEND_DIR = Path(__file__).parent
 SAMPLE_IMAGES_DIR = FRONTEND_DIR / "static" / "sample_images"
 
-DEMO_MODE = os.getenv('DEMO_MODE', 'true').lower() == 'true'
+DEMO_MODE = os.getenv('DEMO_MODE', 'false').lower() == 'true'
 CONFIDENCE_THRESHOLD = 0.25
 IOU_THRESHOLD = 0.45
 
@@ -36,8 +40,19 @@ models = {}
 model_scalers = {}
 feature_scaler = None
 feature_selector = None
+selected_features = []
+raw_feature_names = []
 yolo_model = None
 sample_cache = {}
+
+RAW_FEATURE_COLUMNS = [
+    'vehicle_count', 'density_score', 'center_x_mean', 'center_y_mean',
+    'bbox_area_mean', 'bbox_area_std', 'aspect_ratio_mean', 'spread_area',
+    'spatial_entropy', 'cluster_score', 'road_utilization', 'count_car',
+    'count_truck', 'ratio_car', 'ratio_truck', 'type_diversity',
+    'heavy_vehicle_ratio', 'lane_occupancy', 'traffic_flow_score',
+    'congestion_index', 'speed_estimate', 'confidence_mean', 'confidence_std'
+]
 
 print("=" * 60)
 print("🚀 SKYTRAFFIC AI FLASK DASHBOARD STARTUP")
@@ -45,7 +60,8 @@ print("=" * 60)
 print(f"Demo Mode: {DEMO_MODE}")
 
 def load_models():
-    global models, model_scalers, feature_scaler, feature_selector, yolo_model, sample_cache
+    global models, model_scalers, feature_scaler, feature_selector
+    global selected_features, raw_feature_names, yolo_model, sample_cache
 
     print("📦 Loading ML models...")
     model_files = {
@@ -65,18 +81,27 @@ def load_models():
             print(f"  ✓ {name}")
 
     print("📊 Loading feature scaler and selector...")
-    scaler_path = MODELS_DIR / "feature_scaler.pkl"
+    scaler_path = RESULTS_DIR / "feature_scaler.pkl"
     selector_path = MODELS_DIR / "feature_selector.pkl"
+    selected_features_path = MODELS_DIR / "selected_features.pkl"
 
     if scaler_path.exists():
         feature_scaler = joblib.load(scaler_path)
+        raw_feature_names = list(getattr(feature_scaler, 'feature_names_in_', RAW_FEATURE_COLUMNS))
         print(f"  ✓ feature_scaler")
+
+    else:
+        raw_feature_names = RAW_FEATURE_COLUMNS.copy()
 
     if selector_path.exists():
         feature_selector = joblib.load(selector_path)
         print(f"  ✓ feature_selector")
 
     print("📊 Loading model-specific scalers...")
+    if selected_features_path.exists():
+        selected_features = joblib.load(selected_features_path)
+        print(f"  ✓ selected_features ({len(selected_features)})")
+
     scaler_names = ['logistic_regression_scaler', 'mlp_scaler', 'svm_scaler']
     for scaler_name in scaler_names:
         path = MODELS_DIR / f"{scaler_name}.pkl"
@@ -338,34 +363,33 @@ def classify_traffic_density(vehicle_count):
         return "High"
 
 def get_predictions(features_dict):
-    global models, model_scalers, feature_selector, feature_scaler
+    global models, model_scalers, feature_selector, feature_scaler, raw_feature_names
 
     predictions = {}
 
-    feature_cols = [col for col in features_dict.keys() if col not in ['vehicle_count', 'traffic_label']]
-    features_array = np.array([features_dict[col] for col in feature_cols]).reshape(1, -1)
+    expected_features = raw_feature_names or RAW_FEATURE_COLUMNS
+    ordered_features = {
+        col: float(features_dict.get(col, 0.0))
+        for col in expected_features
+    }
+    raw_df = pd.DataFrame([ordered_features], columns=expected_features)
 
-    # Apply feature selector
+    if feature_scaler is not None:
+        features_array = feature_scaler.transform(raw_df)
+    else:
+        features_array = raw_df.to_numpy(dtype=float)
+
     if feature_selector is not None:
-        try:
-            features_array = feature_selector.transform(features_array)
-        except Exception as e:
-            print(f"Feature selector error: {e}")
-            pass
+        features_array = feature_selector.transform(features_array)
 
-    # Make predictions with each model
     for model_name, model in models.items():
         try:
-            # Apply model-specific scaler if available
             test_features = features_array.copy()
 
             if model_name in ['logistic_regression', 'mlp', 'svm']:
                 scaler_key = f"{model_name}_scaler"
                 if scaler_key in model_scalers:
                     test_features = model_scalers[scaler_key].transform(test_features)
-            else:
-                # Tree-based models don't need scaling, but check shape
-                pass
 
             pred = model.predict(test_features)[0]
             if model_name == 'linear_regression':
@@ -373,7 +397,12 @@ def get_predictions(features_dict):
             else:
                 predictions[model_name] = str(pred)
         except Exception as e:
-            print(f"Error predicting with {model_name}: {e}, features shape: {features_array.shape}")
+            app.logger.exception(
+                "Error predicting with %s: %s; features shape=%s",
+                model_name,
+                e,
+                getattr(features_array, 'shape', None),
+            )
             predictions[model_name] = "Error"
 
     return predictions
@@ -432,35 +461,41 @@ def api_stats_image(image_name):
 def predict():
     global yolo_model
 
-    if DEMO_MODE:
-        return jsonify({"error": "Demo mode - use /demo/<image_name> instead"}), 400
-
-    if 'file' not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No file selected"}), 400
+    temp_path = None
 
     try:
+        app.logger.info("Step 1: receiving file")
+
+        if 'file' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file provided'}), 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No file selected'}), 400
+
         file_bytes = file.read()
         nparr = np.frombuffer(file_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         if img is None:
-            return jsonify({"error": "Invalid image format"}), 400
+            return jsonify({'status': 'error', 'message': 'Invalid image format'}), 400
 
-        temp_path = '/tmp/temp_image.jpg'
-        os.makedirs('/tmp', exist_ok=True)
-        cv2.imwrite(temp_path, img)
+        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
+            temp_path = temp_file.name
+
+        if not cv2.imwrite(temp_path, img):
+            raise RuntimeError("Could not write uploaded image to a temporary file")
 
         vehicle_count, class_counts, valid_detections, annotated_image = run_yolo_detection(temp_path)
+        app.logger.info(f"Step 2: YOLO detected {vehicle_count} vehicles")
 
         if annotated_image is None:
-            return jsonify({"error": "YOLO detection failed"}), 500
+            return jsonify({'status': 'error', 'message': 'YOLO detection failed'}), 500
 
         features = extract_all_features(valid_detections, class_counts, img.shape, ['car', 'truck'])
+        app.logger.info(f"Step 3: features extracted: {len(features)} features")
         predictions = get_predictions(features)
+        app.logger.info(f"Step 4: predictions: {predictions}")
         traffic_label = classify_traffic_density(vehicle_count)
 
         _, img_buffer = cv2.imencode('.jpg', annotated_image)
@@ -483,7 +518,14 @@ def predict():
         return jsonify(response)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Prediction failed at: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                app.logger.warning("Could not remove temporary image %s", temp_path)
 
 @app.route('/demo/<image_name>')
 def demo(image_name):
@@ -495,24 +537,28 @@ def demo(image_name):
     cached = sample_cache[image_name]
     img_path = SAMPLE_IMAGES_DIR / cached.get('image_path', f'{image_name}.jpg')
 
-    if img_path.exists():
-        img = cv2.imread(str(img_path))
-        _, img_buffer = cv2.imencode('.jpg', img)
-        img_base64 = base64.b64encode(img_buffer).decode('utf-8')
+    if not img_path.exists():
+        return jsonify({"error": "Image file not found"}), 404
 
-        response = {
-            'status': 'success',
-            'image': f'data:image/jpeg;base64,{img_base64}',
-            'vehicle_count': cached.get('vehicle_count', 0),
-            'car_count': cached.get('car_count', 0),
-            'truck_count': cached.get('truck_count', 0),
-            'traffic_label': cached.get('traffic_label', 'Low'),
-            'predictions': cached.get('predictions', {}),
-            'features': cached.get('features', {})
-        }
-        return jsonify(response)
+    img = cv2.imread(str(img_path))
+    _, img_buffer = cv2.imencode('.jpg', img)
+    img_base64 = base64.b64encode(img_buffer).decode('utf-8')
 
-    return jsonify({"error": "Image file not found"}), 404
+    predictions = dict(cached.get('predictions', {}))
+    if 'linear_regression' in cached:
+        predictions['linear_regression'] = cached['linear_regression']
+
+    response = {
+        'status': 'success',
+        'image': f'data:image/jpeg;base64,{img_base64}',
+        'vehicle_count': int(cached.get('vehicle_count', 0)),
+        'car_count': int(cached.get('car_count', 0)),
+        'truck_count': int(cached.get('truck_count', 0)),
+        'traffic_label': cached.get('traffic_label', 'Low'),
+        'predictions': predictions,
+        'features': dict(cached.get('features', {}))
+    }
+    return jsonify(response)
 
 if __name__ == '__main__':
     print("🌐 Starting Flask server on http://localhost:5000")
