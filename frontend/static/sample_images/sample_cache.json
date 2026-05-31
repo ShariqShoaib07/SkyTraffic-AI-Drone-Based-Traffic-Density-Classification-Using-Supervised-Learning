@@ -14,13 +14,30 @@
       "knn": "Low"
     },
     "linear_regression": 1.0,
-    "features": {"vehicle_count": 1.0, "density_score": 0.05, "center_x_mean": 0.35, "center_y_mean": 0.44, "bbox_area_mean": 1930, "bbox_area_std": 0, "aspect_ratio_mean": 1.10, "spread_area": 0, "spatial_entropy": 0, "cluster_score": 0, "road_utilization": 0, "count_car": 0, "count_truck": 1, "ratio_car": 0, "ratio_truck": 1, "type_diversity": 0, "heavy_vehicle_ratio": 1, "lane_occupancy": 0, "traffic_flow_score": 1, "congestion_index": 0.048, "speed_estimate": 49, "confidence_mean": 0.79, "confidence_std": 0}
+    "features": {"vehicle_count": 1.0, "density_score": 0.048, "center_x_mean": 0.346, "center_y_mean": 0.437, "bbox_area_mean": 1930, "bbox_area_std": 0, "aspect_ratio_mean": 1.098, "spread_area": 0, "spatial_entropy": 0, "cluster_score": 0, "road_utilization": 0, "count_car": 0, "count_truck": 1, "ratio_car": 0, "ratio_truck": 1, "type_diversity": 0, "heavy_vehicle_ratio": 1, "lane_occupancy": 0, "traffic_flow_score": 1, "congestion_index": 0.048, "speed_estimate": 49, "confidence_mean": 0.790, "confidence_std": 0}
   },
   "sample_2": {
     "image_path": "sample_2.jpg",
-    "vehicle_count": 17,
-    "car_count": 15,
-    "truck_count": 2,
+    "vehicle_count": 5,
+    "car_count": 1,
+    "truck_count": 4,
+    "traffic_label": "Low",
+    "predictions": {
+      "random_forest": "Low",
+      "decision_tree": "Low",
+      "logistic_regression": "Low",
+      "mlp": "Low",
+      "svm": "Low",
+      "knn": "Low"
+    },
+    "linear_regression": 4.8,
+    "features": {"vehicle_count": 5.0, "density_score": 0.241, "center_x_mean": 0.745, "center_y_mean": 0.282, "bbox_area_mean": 1437, "bbox_area_std": 1945, "aspect_ratio_mean": 0.947, "spread_area": 4213, "spatial_entropy": 0.380, "cluster_score": 0.712, "road_utilization": 0.283, "count_car": 1, "count_truck": 4, "ratio_car": 0.2, "ratio_truck": 0.8, "type_diversity": 0.722, "heavy_vehicle_ratio": 0.8, "lane_occupancy": 0.217, "traffic_flow_score": 0.901, "congestion_index": 0.173, "speed_estimate": 45, "confidence_mean": 0.757, "confidence_std": 0.080}
+  },
+  "sample_3": {
+    "image_path": "sample_3.jpg",
+    "vehicle_count": 6,
+    "car_count": 1,
+    "truck_count": 5,
     "traffic_label": "Medium",
     "predictions": {
       "random_forest": "Medium",
@@ -30,75 +47,58 @@
       "svm": "Medium",
       "knn": "Medium"
     },
-    "linear_regression": 16.8,
-    "features": {"vehicle_count": 17, "density_score": 0.267, "center_x_mean": 0.48, "center_y_mean": 0.52, "bbox_area_mean": 2200, "bbox_area_std": 350, "aspect_ratio_mean": 1.15, "spread_area": 45000, "spatial_entropy": 0.65, "cluster_score": 0.42, "road_utilization": 0.75, "count_car": 15, "count_truck": 2, "ratio_car": 0.88, "ratio_truck": 0.12, "type_diversity": 0.38, "heavy_vehicle_ratio": 0.12, "lane_occupancy": 0.3, "traffic_flow_score": 0.75, "congestion_index": 0.15, "speed_estimate": 45, "confidence_mean": 0.82, "confidence_std": 0.05}
-  },
-  "sample_3": {
-    "image_path": "sample_3.jpg",
-    "vehicle_count": 0,
-    "car_count": 0,
-    "truck_count": 0,
-    "traffic_label": "Low",
-    "predictions": {
-      "random_forest": "Low",
-      "decision_tree": "Low",
-      "logistic_regression": "Low",
-      "mlp": "Low",
-      "svm": "Low",
-      "knn": "Low"
-    },
-    "linear_regression": 0.0,
-    "features": {"vehicle_count": 0, "density_score": 0, "center_x_mean": 0.5, "center_y_mean": 0.5, "bbox_area_mean": 0, "bbox_area_std": 0, "aspect_ratio_mean": 0, "spread_area": 0, "spatial_entropy": 0, "cluster_score": 0, "road_utilization": 0, "count_car": 0, "count_truck": 0, "ratio_car": 0, "ratio_truck": 0, "type_diversity": 0, "heavy_vehicle_ratio": 0, "lane_occupancy": 0, "traffic_flow_score": 0, "congestion_index": 0, "speed_estimate": 50, "confidence_mean": 0, "confidence_std": 0}
+    "linear_regression": 5.8,
+    "features": {"vehicle_count": 6.0, "density_score": 0.289, "center_x_mean": 0.908, "center_y_mean": 0.230, "bbox_area_mean": 381, "bbox_area_std": 69, "aspect_ratio_mean": 0.810, "spread_area": 2772, "spatial_entropy": 0.230, "cluster_score": 0.713, "road_utilization": 0.124, "count_car": 1, "count_truck": 5, "ratio_car": 0.167, "ratio_truck": 0.833, "type_diversity": 0.650, "heavy_vehicle_ratio": 0.833, "lane_occupancy": 0.095, "traffic_flow_score": 0.983, "congestion_index": 0.253, "speed_estimate": 44, "confidence_mean": 0.724, "confidence_std": 0.061}
   },
   "sample_4": {
     "image_path": "sample_4.jpg",
-    "vehicle_count": 38,
-    "car_count": 34,
-    "truck_count": 4,
-    "traffic_label": "High",
+    "vehicle_count": 6,
+    "car_count": 1,
+    "truck_count": 5,
+    "traffic_label": "Medium",
     "predictions": {
-      "random_forest": "High",
-      "decision_tree": "High",
-      "logistic_regression": "High",
-      "mlp": "High",
-      "svm": "High",
-      "knn": "High"
+      "random_forest": "Medium",
+      "decision_tree": "Medium",
+      "logistic_regression": "Medium",
+      "mlp": "Medium",
+      "svm": "Medium",
+      "knn": "Medium"
     },
-    "linear_regression": 37.5,
-    "features": {"vehicle_count": 38, "density_score": 0.596, "center_x_mean": 0.50, "center_y_mean": 0.50, "bbox_area_mean": 1850, "bbox_area_std": 420, "aspect_ratio_mean": 1.18, "spread_area": 72000, "spatial_entropy": 0.82, "cluster_score": 0.65, "road_utilization": 0.95, "count_car": 34, "count_truck": 4, "ratio_car": 0.89, "ratio_truck": 0.11, "type_diversity": 0.55, "heavy_vehicle_ratio": 0.11, "lane_occupancy": 0.5, "traffic_flow_score": 0.78, "congestion_index": 0.30, "speed_estimate": 25, "confidence_mean": 0.85, "confidence_std": 0.08}
+    "linear_regression": 5.9,
+    "features": {"vehicle_count": 6.0, "density_score": 0.289, "center_x_mean": 0.867, "center_y_mean": 0.263, "bbox_area_mean": 541, "bbox_area_std": 154, "aspect_ratio_mean": 0.898, "spread_area": 5119, "spatial_entropy": 0.250, "cluster_score": 0.713, "road_utilization": 0.197, "count_car": 1, "count_truck": 5, "ratio_car": 0.167, "ratio_truck": 0.833, "type_diversity": 0.650, "heavy_vehicle_ratio": 0.833, "lane_occupancy": 0.130, "traffic_flow_score": 0.957, "congestion_index": 0.232, "speed_estimate": 44, "confidence_mean": 0.766, "confidence_std": 0.038}
   },
   "sample_5": {
     "image_path": "sample_5.jpg",
-    "vehicle_count": 0,
-    "car_count": 0,
-    "truck_count": 0,
-    "traffic_label": "Low",
+    "vehicle_count": 7,
+    "car_count": 1,
+    "truck_count": 6,
+    "traffic_label": "Medium",
     "predictions": {
-      "random_forest": "Low",
-      "decision_tree": "Low",
-      "logistic_regression": "Low",
-      "mlp": "Low",
-      "svm": "Low",
-      "knn": "Low"
+      "random_forest": "Medium",
+      "decision_tree": "Medium",
+      "logistic_regression": "Medium",
+      "mlp": "Medium",
+      "svm": "Medium",
+      "knn": "Medium"
     },
-    "linear_regression": 0.0,
-    "features": {"vehicle_count": 0, "density_score": 0, "center_x_mean": 0.5, "center_y_mean": 0.5, "bbox_area_mean": 0, "bbox_area_std": 0, "aspect_ratio_mean": 0, "spread_area": 0, "spatial_entropy": 0, "cluster_score": 0, "road_utilization": 0, "count_car": 0, "count_truck": 0, "ratio_car": 0, "ratio_truck": 0, "type_diversity": 0, "heavy_vehicle_ratio": 0, "lane_occupancy": 0, "traffic_flow_score": 0, "congestion_index": 0, "speed_estimate": 50, "confidence_mean": 0, "confidence_std": 0}
+    "linear_regression": 6.8,
+    "features": {"vehicle_count": 7.0, "density_score": 0.338, "center_x_mean": 0.762, "center_y_mean": 0.327, "bbox_area_mean": 1088, "bbox_area_std": 578, "aspect_ratio_mean": 0.997, "spread_area": 13131, "spatial_entropy": 0.389, "cluster_score": 0.705, "road_utilization": 0.439, "count_car": 1, "count_truck": 6, "ratio_car": 0.143, "ratio_truck": 0.857, "type_diversity": 0.592, "heavy_vehicle_ratio": 0.857, "lane_occupancy": 0.264, "traffic_flow_score": 0.777, "congestion_index": 0.189, "speed_estimate": 43, "confidence_mean": 0.730, "confidence_std": 0.190}
   },
   "sample_6": {
     "image_path": "sample_6.jpg",
-    "vehicle_count": 4,
-    "car_count": 4,
-    "truck_count": 0,
-    "traffic_label": "Low",
+    "vehicle_count": 8,
+    "car_count": 1,
+    "truck_count": 7,
+    "traffic_label": "Medium",
     "predictions": {
-      "random_forest": "Low",
-      "decision_tree": "Low",
-      "logistic_regression": "Low",
-      "mlp": "Low",
-      "svm": "Low",
-      "knn": "Low"
+      "random_forest": "Medium",
+      "decision_tree": "Medium",
+      "logistic_regression": "Medium",
+      "mlp": "Medium",
+      "svm": "Medium",
+      "knn": "Medium"
     },
-    "linear_regression": 3.9,
-    "features": {"vehicle_count": 4, "density_score": 0.0627, "center_x_mean": 0.52, "center_y_mean": 0.48, "bbox_area_mean": 2400, "bbox_area_std": 210, "aspect_ratio_mean": 1.14, "spread_area": 12000, "spatial_entropy": 0.55, "cluster_score": 0.35, "road_utilization": 0.40, "count_car": 4, "count_truck": 0, "ratio_car": 1, "ratio_truck": 0, "type_diversity": 0, "heavy_vehicle_ratio": 0, "lane_occupancy": 0.15, "traffic_flow_score": 0.85, "congestion_index": 0.05, "speed_estimate": 48, "confidence_mean": 0.80, "confidence_std": 0.03}
+    "linear_regression": 7.8,
+    "features": {"vehicle_count": 8.0, "density_score": 0.248, "center_x_mean": 0.569, "center_y_mean": 0.421, "bbox_area_mean": 2512, "bbox_area_std": 2251, "aspect_ratio_mean": 1.073, "spread_area": 22000, "spatial_entropy": 0.420, "cluster_score": 0.705, "road_utilization": 0.580, "count_car": 1, "count_truck": 7, "ratio_car": 0.125, "ratio_truck": 0.875, "type_diversity": 0.544, "heavy_vehicle_ratio": 0.875, "lane_occupancy": 0.300, "traffic_flow_score": 0.720, "congestion_index": 0.150, "speed_estimate": 42, "confidence_mean": 0.729, "confidence_std": 0.162}
   }
 }
