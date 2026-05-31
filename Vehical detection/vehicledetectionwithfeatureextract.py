@@ -19,6 +19,16 @@ import joblib
 # Define mixed precision before GPU initialization
 USE_MIXED_PRECISION = True
 
+# Check disk space before starting
+import shutil
+import sys as sys_module
+output_folder = r"D:\UNI\Sem6\Machine Learning\Project\Results"
+free_gb = shutil.disk_usage(output_folder).free / (1024**3)
+print(f"Free disk space: {free_gb:.1f} GB")
+if free_gb < 5:
+    print("ERROR: Less than 5GB free. Free up space before training.")
+    sys_module.exit(1)
+
 # -----------------------------
 # GPU MEMORY OPTIMIZATION
 # -----------------------------
@@ -41,16 +51,16 @@ features_csv = os.path.join(output_folder, "ml_features.csv")
 scaler_path = os.path.join(output_folder, "feature_scaler.pkl")
 
 # OPTIMIZED GPU SETTINGS
-TRAIN_EPOCHS = 15
-TRAIN_IMGSZ = 640
+TRAIN_EPOCHS = 50
+TRAIN_IMGSZ = 1280
 TRAIN_BATCH = 8
 TRAIN_DEVICE = 0
-TRAIN_WORKERS = 0
-TRAIN_PATIENCE = 15
+TRAIN_WORKERS = 4
+TRAIN_PATIENCE = 20
 
 # Vehicle classes
-# class_0 = cars (129,122 detections), class_1 = trucks/buses (17,726 detections)
-VEHICLE_CLASSES = ['car', 'truck']
+# class_0 = cars (137,602 detections), class_1 = motorcycles (17,726 detections)
+VEHICLE_CLASSES = ['car', 'motorcycle']
 NUM_CLASSES = len(VEHICLE_CLASSES)
 
 # DETECTION CONFIDENCE
@@ -245,11 +255,11 @@ def extract_vehicle_type_features(class_counts, actual_classes):
     """
     features = {}
     total_vehicles = sum(class_counts.values())
-    
+
     # Individual vehicle type counts
     for class_name in actual_classes:
         features[f'count_{class_name}'] = class_counts.get(class_name, 0)
-    
+
     # Vehicle type ratios
     if total_vehicles > 0:
         for class_name in actual_classes:
@@ -257,7 +267,7 @@ def extract_vehicle_type_features(class_counts, actual_classes):
     else:
         for class_name in actual_classes:
             features[f'ratio_{class_name}'] = 0.0
-    
+
     # Vehicle type diversity (entropy)
     type_entropy = 0.0
     if total_vehicles > 0:
@@ -265,15 +275,15 @@ def extract_vehicle_type_features(class_counts, actual_classes):
             if count > 0:
                 p = count / total_vehicles
                 type_entropy -= p * math.log2(p)
-    
+
     # Normalize by maximum entropy
     max_entropy = math.log2(len(actual_classes)) if len(actual_classes) > 0 else 1.0
     features['type_diversity'] = type_entropy / max_entropy if max_entropy > 0 else 0.0
-    
-    # Heavy vehicle ratio (trucks + buses)
-    heavy_vehicles = class_counts.get('truck', 0) + class_counts.get('bus', 0)
-    features['heavy_vehicle_ratio'] = heavy_vehicles / total_vehicles if total_vehicles > 0 else 0.0
-    
+
+    # Motorcycle ratio (replacing heavy_vehicle_ratio)
+    motorcycle_ratio = class_counts.get('motorcycle', 0) / max(total_vehicles, 1)
+    features['motorcycle_ratio'] = motorcycle_ratio
+
     return features
 
 def extract_traffic_pattern_features(valid_detections, img_shape):

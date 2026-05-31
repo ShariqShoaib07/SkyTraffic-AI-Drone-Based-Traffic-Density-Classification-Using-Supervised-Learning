@@ -3,6 +3,17 @@ import os
 
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "max_split_size_mb:512")
 
+import shutil
+import sys
+
+# Check disk space before starting
+output_folder = r"D:\UNI\Sem6\Machine Learning\Project\Results"
+free_gb = shutil.disk_usage(output_folder).free / (1024**3)
+print(f"Free disk space: {free_gb:.1f} GB")
+if free_gb < 5:
+    print("ERROR: Less than 5GB free. Free up space before training.")
+    sys.exit(1)
+
 from ultralytics import YOLO
 import cv2
 import pandas as pd
@@ -39,17 +50,17 @@ output_csv = os.path.join(output_folder, "traffic_labels.csv")
 
 # OPTIMIZED GPU SETTINGS - RTX 4060 (8GB VRAM)
 TRAIN_MODEL = False            # Set True only when you want to train again
-TRAIN_EPOCHS = 15
-TRAIN_IMGSZ = 640              
-TRAIN_BATCH = 8                # Safer for RTX 4060 Laptop 8GB VRAM
-TRAIN_DEVICE = 0               
-TRAIN_WORKERS = 0              # Avoid Windows worker re-import issues
-TRAIN_PATIENCE = 15
+TRAIN_EPOCHS = 50
+TRAIN_IMGSZ = 1280
+TRAIN_BATCH = 8                # Reduced from 16 to fit 1280 in VRAM
+TRAIN_DEVICE = 0
+TRAIN_WORKERS = 4              # Increased from 0 for better data loading
+TRAIN_PATIENCE = 20
 # USE_MIXED_PRECISION is defined before GPU initialization.
 
 # Vehicle classes - FOCUS ON ROAD VEHICLES ONLY
-# class_0 = cars (129,122), class_1 = trucks/buses (17,256)
-VEHICLE_CLASSES = ['car', 'truck']
+# class_0 = cars (137,602), class_1 = motorcycles (17,726)
+VEHICLE_CLASSES = ['car', 'motorcycle']
 NUM_CLASSES = len(VEHICLE_CLASSES)
 
 # DETECTION CONFIDENCE - LOWER FOR BETTER DETECTION
@@ -215,7 +226,10 @@ def train_optimized(model, data_yaml_path):
             device=TRAIN_DEVICE,
             workers=TRAIN_WORKERS,
             patience=TRAIN_PATIENCE,
-            
+            cache=True,
+            exist_ok=True,
+            pretrained=True,
+
             # Enhanced learning parameters
             lr0=0.01,           # Learning rate
             lrf=0.01,           # Final learning rate
@@ -224,12 +238,12 @@ def train_optimized(model, data_yaml_path):
             warmup_epochs=3.0,
             warmup_momentum=0.8,
             warmup_bias_lr=0.1,
-            
+
             # OPTIMIZED loss weights - HIGHER CLASS LOSS for better discrimination
             box=7.5,            # Box loss gain
             cls=1.0,            # INCREASED class loss for better vehicle type recognition
             dfl=1.5,            # Distribution Focal Loss
-            
+
             # Enhanced augmentation for vehicles
             hsv_h=0.015,        # Color augmentation
             hsv_s=0.7,
@@ -243,10 +257,8 @@ def train_optimized(model, data_yaml_path):
             fliplr=0.5,         # Horizontal flip
             mosaic=1.0,         # Mosaic augmentation
             mixup=0.0,          # NO mixup to prevent class confusion
-            
+
             save=True,
-            exist_ok=True,
-            pretrained=True,
             optimizer='auto',
             verbose=True,
             single_cls=False,    # Multi-class training

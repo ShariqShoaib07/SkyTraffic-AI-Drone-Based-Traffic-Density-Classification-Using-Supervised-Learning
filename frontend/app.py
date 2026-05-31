@@ -50,7 +50,7 @@ RAW_FEATURE_COLUMNS = [
     'bbox_area_mean', 'bbox_area_std', 'aspect_ratio_mean', 'spread_area',
     'spatial_entropy', 'cluster_score', 'road_utilization', 'count_car',
     'count_motorcycle', 'ratio_car', 'ratio_motorcycle', 'type_diversity',
-    'heavy_vehicle_ratio', 'lane_occupancy', 'traffic_flow_score',
+    'motorcycle_ratio', 'lane_occupancy', 'traffic_flow_score',
     'congestion_index', 'speed_estimate', 'confidence_mean', 'confidence_std'
 ]
 
@@ -250,8 +250,8 @@ def extract_vehicle_type_features(class_counts, actual_classes):
 
     max_entropy = math.log2(len(actual_classes)) if len(actual_classes) > 0 else 1.0
     features['type_diversity'] = type_entropy / max_entropy if max_entropy > 0 else 0.0
-    heavy_vehicles = class_counts.get('motorcycle', 0)
-    features['heavy_vehicle_ratio'] = heavy_vehicles / total_vehicles if total_vehicles > 0 else 0.0
+    motorcycle_ratio = class_counts.get('motorcycle', 0) / max(total_vehicles, 1)
+    features['motorcycle_ratio'] = motorcycle_ratio
 
     return features
 
