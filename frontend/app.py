@@ -557,7 +557,7 @@ def demo(image_name):
         'image': f'data:image/jpeg;base64,{img_base64}',
         'vehicle_count': int(cached.get('vehicle_count', 0)),
         'car_count': int(cached.get('car_count', 0)),
-        'motorcycle_count': int(cached.get('motorcycle_count', cached.get('truck_count', 0))),
+        'motorcycle_count': int(cached.get('motorcycle_count', 0)),
         'traffic_label': cached.get('traffic_label', 'Low'),
         'predictions': predictions,
         'features': dict(cached.get('features', {}))
